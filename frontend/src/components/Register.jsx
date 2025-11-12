@@ -56,22 +56,32 @@ const Register = () => {
     setSnack(prev => ({ ...prev, open: false }));
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleRegister = async () => {
+    if (isSubmitting) return; // prevent re-click
+    setIsSubmitting(true);
+
     try {
       const response = await axios.post("http://localhost:5000/register", usersData);
+
       if (!response.data.success) {
         setSnack({
           open: true,
           message: response.data.message,
           severity: "error"
         });
-        return; 
+        setIsSubmitting(false); // re-enable button
+        return;
       }
-      setUserData({ email: '', password: '' });
-      localStorage.setItem('person_id', response.data.person_id);
+
+      setUserData({ email: "", password: "" });
+      localStorage.setItem("person_id", response.data.person_id);
 
       setSnack({ open: true, message: "Registration Successful", severity: "success" });
-      setTimeout(() => navigate('/login_applicant'), 1000);
+
+      // Wait before navigating
+      setTimeout(() => navigate("/login_applicant"), 1000);
     } catch (error) {
       console.error("Registration failed:", error);
       setSnack({
@@ -79,10 +89,11 @@ const Register = () => {
         message: error.response?.data?.message || "Registration failed",
         severity: "error"
       });
+      setIsSubmitting(false); // re-enable button
     }
   };
 
-  
+
   // ✅ Use background from settings or fallback image
   const backgroundImage = settings?.bg_image
     ? `url(http://localhost:5000${settings.bg_image})`
@@ -213,27 +224,26 @@ const Register = () => {
 
               {/* Register Button — disabled until CAPTCHA is solved */}
               <div
-                onClick={capVal ? handleRegister : null}
+                onClick={capVal && !isSubmitting ? handleRegister : null}
                 style={{
-                  pointerEvents: capVal ? "auto" : "none",
-                  opacity: capVal ? 1 : 0.5,
-                  cursor: capVal ? "pointer" : "not-allowed",
+                  pointerEvents: capVal && !isSubmitting ? "auto" : "none",
+                  opacity: capVal && !isSubmitting ? 1 : 0.5,
+                  cursor: capVal && !isSubmitting ? "pointer" : "not-allowed",
                   marginTop: "20px",
                   backgroundColor: mainButtonColor,
                   height: "50px",
-                  border: `2px solid ${borderColor}`, 
+                  border: `2px solid ${borderColor}`,
                   borderRadius: "10px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "white", // ✅ optional: make text visible if background is dark
-                  fontWeight: "bold", // ✅ optional: improve button appearance
-                  fontSize: "16px", // ✅ optional: make text readable
+                  color: "white",
+                  fontWeight: "bold",
+                  fontSize: "16px",
                 }}
               >
-                Register
+                {isSubmitting ? "Registering..." : "Register"}
               </div>
-
 
               <div className="LinkContainer RegistrationLink" style={{ margin: '0.1rem 0rem' }}>
                 <p>Already Have an Account?</p>

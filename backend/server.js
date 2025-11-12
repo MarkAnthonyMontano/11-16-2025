@@ -5946,6 +5946,7 @@ app.get("/api/interview/applicants-with-number", async (req, res) => {
 
 // ================== INTERVIEW APPLICANTS API ==================
 
+
 // 1. Get not-emailed interview applicants
 app.get("/api/interview/not-emailed-applicants", async (req, res) => {
   try {
@@ -6038,6 +6039,40 @@ app.get("/interview_schedules_with_count", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching interview schedules with count:", err);
     res.status(500).json({ error: "Failed to fetch interview schedules with count" });
+  }
+});
+
+// 4. Unassign one applicant
+app.post("/unassign_interview", async (req, res) => {
+  const { applicant_number } = req.body;
+  try {
+    await db.query(
+      `UPDATE interview_applicants 
+       SET schedule_id = NULL 
+       WHERE applicant_id = ?`,
+      [applicant_number]
+    );
+    res.json({ success: true, message: `Applicant ${applicant_number} unassigned.` });
+  } catch (err) {
+    console.error("❌ Error unassigning interview applicant:", err);
+    res.status(500).json({ error: "Failed to unassign applicant." });
+  }
+});
+
+// 5. Unassign ALL applicants
+app.post("/unassign_all_from_interview", async (req, res) => {
+  const { schedule_id } = req.body;
+  try {
+    await db.query(
+      `UPDATE interview_applicants 
+       SET schedule_id = NULL 
+       WHERE schedule_id = ?`,
+      [schedule_id]
+    );
+    res.json({ success: true, message: `All applicants unassigned from schedule ${schedule_id}.` });
+  } catch (err) {
+    console.error("❌ Error unassigning all interview applicants:", err);
+    res.status(500).json({ error: "Failed to unassign all applicants." });
   }
 });
 
@@ -6207,6 +6242,8 @@ io.on("connection", (socket) => {
       socket.emit("update_schedule_result", { success: false, error: "Failed to update interview schedule." });
     }
   });
+
+  
 
   // Unassign ALL
   socket.on("unassign_all_from_interview", async ({ schedule_id }) => {

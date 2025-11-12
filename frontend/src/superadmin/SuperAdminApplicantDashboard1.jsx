@@ -25,7 +25,7 @@ import ExamPermit from "../applicant/ExamPermit";
 import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
 import SearchIcon from "@mui/icons-material/Search";
-
+import { Snackbar, Alert } from "@mui/material";
 
 
 const SuperAdminApplicantDashboard1 = () => {
@@ -123,7 +123,8 @@ const SuperAdminApplicantDashboard1 = () => {
         permanentDswdHouseholdNumber: "",
     });
 
-
+    const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+    const handleCloseSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
     const [hasAccess, setHasAccess] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -589,7 +590,7 @@ const SuperAdminApplicantDashboard1 = () => {
 
         // Check file type
         if (!validTypes.includes(file.type)) {
-            alert("Invalid file type. Please select a JPEG or PNG file.");
+            setSnackbar({ open: true, message: "Invalid file type. Please select a JPEG or PNG file.", severity: "error" });
             setSelectedFile(null);
             setPreview(null);
             return;
@@ -597,7 +598,7 @@ const SuperAdminApplicantDashboard1 = () => {
 
         // Check file size
         if (file.size > maxSizeInBytes) {
-            alert("File is too large. Maximum allowed size is 2MB.");
+            setSnackbar({ open: true, message: "File is too large. Maximum allowed size is 2MB.", severity: "error" });
             setSelectedFile(null);
             setPreview(null);
             return;
@@ -612,7 +613,7 @@ const SuperAdminApplicantDashboard1 = () => {
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            alert("Please select a file first.");
+            setSnackbar({ open: true, message: "Please select a file first.", severity: "warning" });
             return;
         }
 
@@ -641,11 +642,11 @@ const SuperAdminApplicantDashboard1 = () => {
             await handleUpdate(updatedPerson); // ✅ this pushes the profile_img change into DB
 
             setUploadedImage(`http://localhost:5000/uploads/${fileName}`);
-            alert("Upload successful!");
+            setSnackbar({ open: true, message: "Upload successful!", severity: "success" });
             handleClose();
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Upload failed.");
+            setSnackbar({ open: true, message: "Upload failed.", severity: "error" });
         }
     };
 
@@ -1127,64 +1128,66 @@ const SuperAdminApplicantDashboard1 = () => {
                 </Table>
             </TableContainer>
 
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      width: "100%",
+                      mt: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        p: 2,
+                        borderRadius: "10px",
+                        backgroundColor: "#fffaf5",
+                        border: "1px solid #6D2323",
+                        boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
+                        width: "100%",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {/* Icon */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#800000",
+                          borderRadius: "8px",
+                          width: 50,
+                          height: 50,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <ErrorIcon sx={{ color: "white", fontSize: 36 }} />
+                      </Box>
+            
+                      {/* Text */}
+                      <Typography
+                        sx={{
+                          fontSize: "20px",
+                          fontFamily: "Arial",
+                          color: "#3e3e3e",
+                          lineHeight: 1.3, // slightly tighter to fit in fewer rows
+                          whiteSpace: "normal",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <strong style={{ color: "maroon" }}>Notice:</strong> &nbsp;
+                        <strong>1.</strong> Kindly type <strong>'NA'</strong> in boxes where there are no possible answers to the information being requested. &nbsp; | &nbsp;
+                        <strong>2.</strong> To use the letter <strong>'Ñ'</strong>, press <kbd>ALT</kbd> + <kbd>165</kbd>; for <strong>'ñ'</strong>, press <kbd>ALT</kbd> + <kbd>164</kbd>. &nbsp; | &nbsp;
+                        <strong>3.</strong> This is the list of all printable files.
+                      </Typography>
+                    </Box>
+                  </Box>
+
             <Container>
 
-              <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          width: "100%",
-          mt: 2,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-            p: 2,
-            borderRadius: "10px",
-            backgroundColor: "#fffaf5",
-            border: "1px solid #6D2323",
-            boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          {/* Icon */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#800000",
-              borderRadius: "8px",
-              width: 50,
-              height: 50,
-              flexShrink: 0,
-            }}
-          >
-            <ErrorIcon sx={{ color: "white", fontSize: 36 }} />
-          </Box>
-
-          {/* Text */}
-          <Typography
-            sx={{
-              fontSize: "20px",
-              fontFamily: "Arial",
-              color: "#3e3e3e",
-              lineHeight: 1.3, // slightly tighter to fit in fewer rows
-              whiteSpace: "normal",
-              overflow: "hidden",
-            }}
-          >
-            <strong style={{ color: "maroon" }}>Notice:</strong> &nbsp;
-            <strong>1.</strong> Kindly type <strong>'NA'</strong> in boxes where there are no possible answers to the information being requested. &nbsp; | &nbsp;
-            <strong>2.</strong> To use the letter <strong>'Ñ'</strong>, press <kbd>ALT</kbd> + <kbd>165</kbd>; for <strong>'ñ'</strong>, press <kbd>ALT</kbd> + <kbd>164</kbd>. &nbsp; | &nbsp;
-            <strong>3.</strong> This is the list of all printable files.
-          </Typography>
-        </Box>
-      </Box>
+            
 
                 {/* Cards Section */}
                 <Box
@@ -3106,6 +3109,19 @@ const SuperAdminApplicantDashboard1 = () => {
                                 Next Step
                             </Button>
                         </Box>
+
+
+                        <Snackbar
+                            open={snackbar.open}
+                            autoHideDuration={3000}
+                            onClose={handleCloseSnackbar}
+                            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                        >
+                            <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
+                                {snackbar.message}
+                            </Alert>
+                        </Snackbar>
+
 
                     </Container>
                 </form>

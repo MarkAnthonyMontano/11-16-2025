@@ -11,26 +11,15 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Card,
   Paper,
   Grid,
   Snackbar,
   Alert,
 } from "@mui/material";
-import SchoolIcon from "@mui/icons-material/School";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
-import ScheduleIcon from "@mui/icons-material/Schedule";
-import PersonSearchIcon from "@mui/icons-material/PersonSearch";
-import PeopleIcon from "@mui/icons-material/People";
-import FactCheckIcon from "@mui/icons-material/FactCheck";
 import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
-import KeyIcon from "@mui/icons-material/Key";
-import { useNavigate } from "react-router-dom";
 
-const RoomRegistration = () => {
+const SuperAdminRoomRegistration = () => {
   const settings = useContext(SettingsContext);
 
   const [titleColor, setTitleColor] = useState("#000000");
@@ -77,7 +66,7 @@ const RoomRegistration = () => {
   const [hasAccess, setHasAccess] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const pageId = 55;
+  const pageId = 100;
 
   const [employeeID, setEmployeeID] = useState("");
 
@@ -124,31 +113,6 @@ const RoomRegistration = () => {
     }
   };
 
-  const tabs = [
-    { label: "Admission Process for Registrar", to: "/applicant_list_admin", icon: <SchoolIcon fontSize="large" /> },
-    { label: "Applicant Form", to: "/admin_dashboard1", icon: <DashboardIcon fontSize="large" /> },
-    { label: "Student Requirements", to: "/student_requirements", icon: <AssignmentIcon fontSize="large" /> },
-    { label: "Room Registration", to: "/room_registration", icon: <KeyIcon fontSize="large" /> },
-    { label: "Entrance Exam Room Assignment", to: "/assign_entrance_exam", icon: <MeetingRoomIcon fontSize="large" /> },
-    { label: "Entrance Exam Schedule Management", to: "/assign_schedule_applicant", icon: <ScheduleIcon fontSize="large" /> },
-    { label: "Examination Profile", to: "/registrar_examination_profile", icon: <PersonSearchIcon fontSize="large" /> },
-    { label: "Proctor's Applicant List", to: "/proctor_applicant_list", icon: <PeopleIcon fontSize="large" /> },
-    { label: "Entrance Examination Scores", to: "/applicant_scoring", icon: <FactCheckIcon fontSize="large" /> },
-
-
-
-  ];
-
-
-  const navigate = useNavigate();
-  const [activeStep, setActiveStep] = useState(4);
-  const [clickedSteps, setClickedSteps] = useState(Array(tabs.length).fill(false));
-
-
-  const handleStepClick = (index, to) => {
-    setActiveStep(index);
-    navigate(to); // this will actually change the page
-  };
 
   // 🔹 Room management states
   const [roomName, setRoomName] = useState("");
@@ -344,53 +308,6 @@ const RoomRegistration = () => {
         </Typography>
       </Box>
       <hr style={{ border: "1px solid #ccc", width: "100%" }} />
-
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          flexWrap: "nowrap", // ❌ prevent wrapping
-          width: "100%",
-          mt: 3,
-          gap: 2,
-        }}
-      >
-        {tabs.map((tab, index) => (
-          <Card
-            key={index}
-            onClick={() => handleStepClick(index, tab.to)}
-            sx={{
-              flex: `1 1 ${100 / tabs.length}%`, // evenly divide row
-              height: 135,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              borderRadius: 2,
-              border: `2px solid ${borderColor}`,
-              backgroundColor: activeStep === index ? settings?.header_color || "#1976d2" : "#E8C999",
-              color: activeStep === index ? "#fff" : "#000",
-              boxShadow:
-                activeStep === index
-                  ? "0px 4px 10px rgba(0,0,0,0.3)"
-                  : "0px 2px 6px rgba(0,0,0,0.15)",
-              transition: "0.3s ease",
-              "&:hover": {
-                backgroundColor: activeStep === index ? "#5a1c1c" : "#f5d98f",
-              },
-            }}
-          >
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <Box sx={{ fontSize: 40, mb: 1 }}>{tab.icon}</Box>
-              <Typography sx={{ fontSize: 14, fontWeight: "bold", textAlign: "center" }}>
-                {tab.label}
-              </Typography>
-            </Box>
-          </Card>
-        ))}
-      </Box>
-      <br />
       <br />
 
       <Grid container spacing={4}>
@@ -460,10 +377,10 @@ const RoomRegistration = () => {
               <Table stickyHeader size="small">
                 <TableHead >
                   <TableRow >
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Room ID</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Building</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Room Name</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Actions</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Room ID</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Building</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Room Name</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -523,4 +440,4 @@ const RoomRegistration = () => {
   );
 };
 
-export default RoomRegistration;
+export default SuperAdminRoomRegistration;

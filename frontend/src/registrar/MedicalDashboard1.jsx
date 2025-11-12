@@ -1206,10 +1206,7 @@ const MedicalDashboard1 = () => {
 
       <br />
 
-
-      <Container>
-
-       <Box
+      <Box
         sx={{
           display: "flex",
           justifyContent: "center",
@@ -1265,6 +1262,9 @@ const MedicalDashboard1 = () => {
           </Typography>
         </Box>
       </Box>
+
+
+      <Container>
 
 
         {/* Cards Section */}

@@ -136,12 +136,13 @@ const AdmissionDashboardPanel = () => {
         { title: "HEALTH MEDICAL RECORDS", link: "/admin_dashboard4", icon: LocalHospital, page_id: 4 },
         { title: "OTHER INFORMATION", link: "/admin_dashboard5", icon: Info, page_id: 5 },
         { title: "DOCUMENTS SUBMITTED", link: "/student_requirements", icon: Description, page_id: 64 },
+        { title: "ROOM REGISTRATION", link: "/room_registration", icon: MeetingRoom, page_id: 55 },
         { title: "ENTRANCE EXAM ROOM ASSIGNMENT", link: "/assign_entrance_exam", icon: MeetingRoom, page_id: 9 },
         { title: "ENTRANCE EXAM SCHEDULE MANAGEMENT", link: "/assign_schedule_applicant", icon: EditCalendar, page_id: 11 },
         { title: "EXAMINATION PERMIT", link: "/registrar_examination_profile", icon: Badge, page_id: 51 },
         { title: "PROCTOR'S APPLICANT LIST", link: "/proctor_applicant_list", icon: People, page_id: 37 },
         { title: "ENTRANCE EXAMINATION SCORES", link: "/applicant_scoring", icon: Score, page_id: 8 },
-        { title: "ROOM REGISTRATION", link: "/room_registration", icon: MeetingRoom, page_id: 55 },
+
       ],
     },
 

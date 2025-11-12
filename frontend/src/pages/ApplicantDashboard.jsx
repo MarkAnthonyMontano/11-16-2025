@@ -15,6 +15,7 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Tooltip,
 } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
@@ -423,7 +424,6 @@ const ApplicantDashboard = (props) => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // Get today's date in Manila timezone (UTC+8)
   const now = new Date();
   const manilaDate = new Date(
     now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
@@ -432,12 +432,9 @@ const ApplicantDashboard = (props) => {
   const thisMonth = manilaDate.getMonth();
   const thisYear = manilaDate.getFullYear();
 
-  // First day of the month
   const firstDay = new Date(year, month, 1).getDay();
-  // Total days in the month
   const totalDays = new Date(year, month + 1, 0).getDate();
 
-  // Build weeks array
   const weeks = [];
   let currentDay = 1 - firstDay;
 
@@ -454,14 +451,8 @@ const ApplicantDashboard = (props) => {
     weeks.push(week);
   }
 
-  // Handle month navigation
-  const handlePrevMonth = () => {
-    setDate(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setDate(new Date(year, month + 1, 1));
-  };
+  const handlePrevMonth = () => setDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setDate(new Date(year, month + 1, 1));
 
 
   const stepIcons = {
@@ -521,9 +512,11 @@ const ApplicantDashboard = (props) => {
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`);
+        const res = await axios.get(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`
+        );
         const lookup = {};
-        res.data.forEach(h => {
+        res.data.forEach((h) => {
           lookup[h.date] = h;
         });
         setHolidays(lookup);
@@ -532,9 +525,8 @@ const ApplicantDashboard = (props) => {
         setHolidays({});
       }
     };
-
     fetchHolidays();
-  }, [year]);  // 👈 refetch when year changes
+  }, [year]);
 
   const [announcements, setAnnouncements] = useState([]);
 
@@ -882,7 +874,7 @@ const ApplicantDashboard = (props) => {
                     transition: "transform 0.2s ease",
                     boxShadow: 3,
                     "&:hover": { transform: "scale(1.03)" },
-
+                    height: "114px",
                     borderRadius: "10px",
                     backgroundColor: "#fffaf5",
                     border: `2px solid ${borderColor}`,
@@ -930,7 +922,7 @@ const ApplicantDashboard = (props) => {
                 boxShadow: 3,
                 p: 2,
                 width: "490px",
-                height: "375px",
+                height: "405px",
                 display: "flex",
                 border: `2px solid ${borderColor}`,
                 flexDirection: "column",
@@ -962,7 +954,7 @@ const ApplicantDashboard = (props) => {
                           mb: 2,
                           p: 1,
                           width: 430,
-                          
+
 
                           borderRadius: 2,
                           border: `2px solid ${borderColor}`,
@@ -1094,9 +1086,8 @@ const ApplicantDashboard = (props) => {
                 boxShadow: 3,
                 p: 2,
                 width: "425px",
-                height: "375px",
+                height: "405px",
                 transition: "transform 0.2s ease",
-                boxShadow: 3,
                 "&:hover": { transform: "scale(1.03)" },
                 display: "flex",
                 flexDirection: "column",
@@ -1105,17 +1096,16 @@ const ApplicantDashboard = (props) => {
               }}
             >
               <CardContent sx={{ p: 0, width: "100%" }}>
-                {/* Header with month + year + arrows */}
+                {/* Header */}
                 <Grid
                   container
                   alignItems="center"
                   justifyContent="space-between"
                   sx={{
                     backgroundColor: settings?.header_color || "#1976d2",
-
                     color: "white",
-                    borderRadius: "6px 6px 0 0",
-                    padding: "4px 8px",
+                    border: "2px solid black",
+                    padding: "10px 8px",
                   }}
                 >
                   <Grid item>
@@ -1135,64 +1125,100 @@ const ApplicantDashboard = (props) => {
                   </Grid>
                 </Grid>
 
-                {/* Days of Week */}
-                <Divider />
-                <Grid container spacing={0.5} sx={{ mt: 1 }}>
+       
+                {/* Calendar Table */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    border: "2px solid black",
+                    borderCollapse: "collapse",
+                  }}
+                >
+                  {/* Days of the week row */}
                   {days.map((day, idx) => (
-                    <Grid item xs key={idx}>
-                      <Typography
-                        variant="body2"
-                        align="center"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        {day}
-                      </Typography>
-                    </Grid>
+                    <Box
+                      key={idx}
+                      sx={{
+                        border: "1px solid black",
+                        backgroundColor: "#f3f3f3",
+                        textAlign: "center",
+                        py: 1,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {day}
+                    </Box>
                   ))}
-                </Grid>
 
-                {/* Dates */}
-                {weeks.map((week, i) => (
-                  <Grid container spacing={0.5} key={i}>
-                    {week.map((day, j) => {
+                  {/* Dates */}
+                  {weeks.map((week, i) =>
+                    week.map((day, j) => {
                       if (!day) {
-                        return <Grid item xs key={j}></Grid>;
+                        return (
+                          <Box
+                            key={`${i}-${j}`}
+                            sx={{
+                              border: "1px solid black",
+                              height: 45,
+                              backgroundColor: "#fff",
+                            }}
+                          />
+                        );
                       }
 
-                      const isToday = day === today && month === thisMonth && year === thisYear;
-                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                      const isToday =
+                        day === today && month === thisMonth && year === thisYear;
+                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+                        day
+                      ).padStart(2, "0")}`;
                       const isHoliday = holidays[dateKey];
 
-                      return (
-                        <Grid item xs key={j}>
-                          <Typography
-                            variant="body2"
-                            align="center"
-                            sx={{
-                              color: isToday ? "white" : "black",
-                              backgroundColor: isToday
-                                ? settings?.header_color || "#1976d2"
-                                : isHoliday
-                                  ? "#E8C999"
-                                  : "transparent",
-                              borderRadius: "50%",
-                              width: 45,
-                              height: 38,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: isHoliday ? "bold" : "500",
-                              margin: "0 auto",
-                            }}
-                            title={isHoliday ? isHoliday.localName : ""}
-                          >
-                            {day}
-                          </Typography>
-                        </Grid>
+                      const dayCell = (
+                        <Box
+                          sx={{
+                            border: "1px solid black",
+                            height: 45,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: isToday
+                              ? settings?.header_color || "#1976d2"
+                              : isHoliday
+                                ? "#E8C999"
+                                : "#fff",
+                            color: isToday ? "white" : "black",
+                            fontWeight: isHoliday ? "bold" : "500",
+                            cursor: isHoliday ? "pointer" : "default",
+                            "&:hover": {
+                              backgroundColor: isHoliday ? "#F5DFA6" : "#f1f1f1",
+                            },
+                          }}
+                        >
+                          {day}
+                        </Box>
                       );
-                    })}
-                  </Grid>
-                ))}
+
+                      return isHoliday ? (
+                        <Tooltip
+                          key={`${i}-${j}`}
+                          title={
+                            <>
+                              <Typography fontWeight="bold">{isHoliday.localName}</Typography>
+                              <Typography variant="caption">{isHoliday.date}</Typography>
+                            </>
+                          }
+                          arrow
+                          placement="top"
+                        >
+                          {dayCell}
+                        </Tooltip>
+                      ) : (
+                        <React.Fragment key={`${i}-${j}`}>{dayCell}</React.Fragment>
+                      );
+                    })
+                  )}
+                </Box>
               </CardContent>
             </Card>
           </Grid>
@@ -1389,7 +1415,7 @@ const ApplicantDashboard = (props) => {
 
                       {interviewSchedule && (
                         <>
-              
+
                           📅 Date: {formatDate(interviewSchedule?.day_description)} <br />
                           🏫 Building: {interviewSchedule.building_description || "TBA"} <br />
                           🏷️ Room: {interviewSchedule.room_description || "TBA"} <br />

@@ -119,7 +119,7 @@ const SystemDashboardPanel = () => {
     {
       label: "ROOM & REQUIREMENTS MANAGEMENT",
       items: [
-        { title: "ROOM FORM", link: "/room_registration", icon: MeetingRoom, page_id: 55 },
+        { title: "ROOM FORM", link: "/super_admin_room_registration", icon: MeetingRoom, page_id: 100 },
         { title: "REQUIREMENTS PANEL", link: "/requirements_form", icon: Assignment, page_id: 54 },
       ],
     },

@@ -124,7 +124,9 @@ const AccountDashboard = () => {
       label: "ACCOUNT INFORMATION",
       items: [
         { title: "APPLICANT INFORMATION", path: "/super_admin_applicant_dashboard1", icon: Info, page_id: 78 },
+        { title: "UPLOAD REQUIREMENTS", path: "/super_admin_requirements_uploader", icon: Info, page_id: 99 },
         { title: "STUDENT INFORMATION", path: "/super_admin_student_dashboard1", icon: Info, page_id: 87 },
+
       ],
     },
 
