@@ -15,7 +15,8 @@ import {
   Divider,
   IconButton,
   Stack,
-  Avatar
+  Avatar,
+  Tooltip
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import SchoolIcon from "@mui/icons-material/School";
@@ -248,7 +249,6 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // Get today's date in Manila timezone (UTC+8)
   const now = new Date();
   const manilaDate = new Date(
     now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
@@ -257,12 +257,9 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
   const thisMonth = manilaDate.getMonth();
   const thisYear = manilaDate.getFullYear();
 
-  // First day of the month
   const firstDay = new Date(year, month, 1).getDay();
-  // Total days in the month
   const totalDays = new Date(year, month + 1, 0).getDate();
 
-  // Build weeks array
   const weeks = [];
   let currentDay = 1 - firstDay;
 
@@ -279,23 +276,20 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
     weeks.push(week);
   }
 
-  // Handle month navigation
-  const handlePrevMonth = () => {
-    setDate(new Date(year, month - 1, 1));
-  };
+  const handlePrevMonth = () => setDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setDate(new Date(year, month + 1, 1));
 
-  const handleNextMonth = () => {
-    setDate(new Date(year, month + 1, 1));
-  };
 
   const [holidays, setHolidays] = useState({});
 
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`);
+        const res = await axios.get(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`
+        );
         const lookup = {};
-        res.data.forEach(h => {
+        res.data.forEach((h) => {
           lookup[h.date] = h;
         });
         setHolidays(lookup);
@@ -304,9 +298,8 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
         setHolidays({});
       }
     };
-
     fetchHolidays();
-  }, [year]);  // 👈 refetch when year changes
+  }, [year]);
 
   const [openImage, setOpenImage] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
@@ -543,11 +536,10 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
             width: "100%",
             margin: 0,
             marginLeft: "17px",
-
             display: "flex",
-            flexDirection: "row", // Force 1 row
-            justifyContent: "space-between", // Spread them evenly
-            flexWrap: "nowrap", // Prevent wrapping
+            flexDirection: "row",
+            justifyContent: "space-between",
+            flexWrap: "nowrap",
           }}
         >
           {/* Calendar */}
@@ -557,10 +549,10 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                 border: `2px solid ${borderColor}`,
                 boxShadow: 3,
                 p: 2,
-                height: "375px",
+                height: "400px", // ✅ fixed height
                 display: "flex",
+                borderRadius: "10px",
                 transition: "transform 0.2s ease",
-                boxShadow: 3,
                 "&:hover": { transform: "scale(1.03)" },
                 flexDirection: "column",
                 justifyContent: "flex-start",
@@ -576,8 +568,10 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                   sx={{
                     backgroundColor: settings?.header_color || "#1976d2",
                     color: "white",
-                    borderRadius: "6px 6px 0 0",
-                    padding: "4px 8px",
+                    border: `2px solid ${borderColor}`,
+                    borderBottom: "none",
+                    borderRadius: "8px 8px 0 0",
+                    padding: "10px 8px",
                   }}
                 >
                   <Grid item>
@@ -597,63 +591,106 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                   </Grid>
                 </Grid>
 
-                {/* Days of Week */}
-                <Divider />
-                <Grid container spacing={0.5} sx={{ mt: 1 }}>
+                {/* Calendar Table */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(7, 1fr)",
+                    borderLeft: `2px solid ${borderColor}`,
+                    borderRight: `2px solid ${borderColor}`,
+                    borderBottom: `2px solid ${borderColor}`,
+                    borderTop: `2px solid ${borderColor}`,
+                    borderRadius: "0 0 8px 8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  {/* Days of the week */}
                   {days.map((day, idx) => (
-                    <Grid item xs key={idx}>
-                      <Typography variant="body2" align="center" sx={{ fontWeight: "bold" }}>
-                        {day}
-                      </Typography>
-                    </Grid>
+                    <Box
+                      key={idx}
+                      sx={{
+                        backgroundColor: "#f3f3f3",
+                        textAlign: "center",
+                        py: 1,
+                        fontWeight: "bold",
+                        borderBottom: `1px solid ${borderColor}`,
+                      }}
+                    >
+                      {day}
+                    </Box>
                   ))}
-                </Grid>
 
-                {/* Dates */}
-                {weeks.map((week, i) => (
-                  <Grid container spacing={0.5} key={i}>
-                    {week.map((day, j) => {
+                  {/* Dates */}
+                  {weeks.map((week, i) =>
+                    week.map((day, j) => {
                       if (!day) {
-                        return <Grid item xs key={j}></Grid>;
+                        return (
+                          <Box
+                            key={`${i}-${j}`}
+                            sx={{
+                              height: 45,
+                              backgroundColor: "#fff",
+                            }}
+                          />
+                        );
                       }
 
                       const isToday = day === today && month === thisMonth && year === thisYear;
-                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+                        day
+                      ).padStart(2, "0")}`;
                       const isHoliday = holidays[dateKey];
 
-                      return (
-                        <Grid item xs key={j}>
-                          <Typography
-                            variant="body2"
-                            align="center"
-                            sx={{
-                              color: isToday ? "white" : "black",
-                              backgroundColor: isToday
-                                ? settings?.header_color || "#1976d2"
-                                : isHoliday
-                                  ? "#E8C999"
-                                  : "transparent",
-                              borderRadius: "50%",
-                              width: 45,
-                              height: 38,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: isHoliday ? "bold" : "500",
-                              margin: "0 auto",
-                            }}
-                            title={isHoliday ? isHoliday.localName : ""}
-                          >
-                            {day}
-                          </Typography>
-                        </Grid>
+                      const dayCell = (
+                        <Box
+                          sx={{
+                            height: 45,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "50%",
+                            backgroundColor: isToday
+                              ? settings?.header_color || "#1976d2"
+                              : isHoliday
+                                ? "#E8C999"
+                                : "#fff",
+                            color: isToday ? "white" : "black",
+                            fontWeight: isHoliday ? "bold" : "500",
+                            cursor: isHoliday ? "pointer" : "default",
+                            "&:hover": {
+                              backgroundColor: isHoliday ? "#F5DFA6" : "#000",
+                              color: isHoliday ? "black" : "white",
+                            },
+                          }}
+                        >
+                          {day}
+                        </Box>
                       );
-                    })}
-                  </Grid>
-                ))}
+
+                      return isHoliday ? (
+                        <Tooltip
+                          key={`${i}-${j}`}
+                          title={
+                            <>
+                              <Typography fontWeight="bold">{isHoliday.localName}</Typography>
+                              <Typography variant="caption">{isHoliday.date}</Typography>
+                            </>
+                          }
+                          arrow
+                          placement="top"
+                        >
+                          {dayCell}
+                        </Tooltip>
+                      ) : (
+                        <React.Fragment key={`${i}-${j}`}>{dayCell}</React.Fragment>
+                      );
+                    })
+                  )}
+                </Box>
               </CardContent>
             </Card>
           </Grid>
+
 
           {/* Donut Chart */}
           <Grid item sx={{ flex: "1 1 33%", }}>
@@ -666,7 +703,7 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                 boxShadow: 3,
                 "&:hover": { transform: "scale(1.03)" },
                 p: 2,
-                height: "375px",
+                height: "400px",
               }}
             >
               <CardContent sx={{ textAlign: "center" }}>
@@ -752,9 +789,9 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                 marginLeft: "10px",
                 boxShadow: 3,
                 p: 2,
-                height: "375px",
+                height: "400px",
                 display: "flex",
-                border: "2px solid #800000",
+               border: `2px solid ${borderColor}`,
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
@@ -785,7 +822,7 @@ const StudentDashboard = ({ profileImage, setProfileImage }) => {
                           p: 1,
                           width: "100%",
                           borderRadius: 2,
-                         border: `2px solid ${borderColor}`, 
+                          border: `2px solid ${borderColor}`,
                           backgroundColor: "#fff8f6",
                         }}
                       >

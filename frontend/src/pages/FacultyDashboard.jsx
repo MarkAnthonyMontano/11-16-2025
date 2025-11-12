@@ -12,6 +12,7 @@ import {
   Avatar,
   IconButton,
   Button,
+  Tooltip,
 } from "@mui/material";
 import { Dialog } from "@mui/material";
 import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
@@ -155,7 +156,6 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // Get today's date in Manila timezone (UTC+8)
   const now = new Date();
   const manilaDate = new Date(
     now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
@@ -164,12 +164,9 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
   const thisMonth = manilaDate.getMonth();
   const thisYear = manilaDate.getFullYear();
 
-  // First day of the month
   const firstDay = new Date(year, month, 1).getDay();
-  // Total days in the month
   const totalDays = new Date(year, month + 1, 0).getDate();
 
-  // Build weeks array
   const weeks = [];
   let currentDay = 1 - firstDay;
 
@@ -186,23 +183,20 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
     weeks.push(week);
   }
 
-  // Handle month navigation
-  const handlePrevMonth = () => {
-    setDate(new Date(year, month - 1, 1));
-  };
+  const handlePrevMonth = () => setDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setDate(new Date(year, month + 1, 1));
 
-  const handleNextMonth = () => {
-    setDate(new Date(year, month + 1, 1));
-  };
 
   const [holidays, setHolidays] = useState({});
 
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`);
+        const res = await axios.get(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`
+        );
         const lookup = {};
-        res.data.forEach(h => {
+        res.data.forEach((h) => {
           lookup[h.date] = h;
         });
         setHolidays(lookup);
@@ -211,9 +205,9 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
         setHolidays({});
       }
     };
-
     fetchHolidays();
   }, [year]);
+
 
   const formattedDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -392,7 +386,7 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
               p: 2,
               width: "100%",
               minWidth: "66rem",
-              height: "550px", // ✅ keep original height
+              height: "612px", // ✅ keep original height
               border: `2px solid ${borderColor}`,
               transition: "transform 0.3s ease, box-shadow 0.3s ease",
               "&:hover": {
@@ -545,157 +539,218 @@ const FacultyDashboard = ({ profileImage, setProfileImage }) => {
             </CardContent>
           </Card>
         </Grid>
-        <Box>
-          <Grid item xs="auto">
-            <Card
-              sx={{
-                border: `2px solid ${borderColor}`,
-                marginLeft: "10px",
-                boxShadow: 3,
-                borderRadius: "10px",
-                p: 2,
-                width: "425px",
-                height: "335px",
-                transition: "transform 0.2s ease",
-                boxShadow: 3,
-                "&:hover": { transform: "scale(1.03)" },
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
-              }}
-            >
-              <CardContent sx={{ p: 0, width: "100%" }}>
-                {/* Header with month + year + arrows */}
-                <Grid
-                  container
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{
-                    backgroundColor: settings?.header_color || "#1976d2",
-                    color: "white",
-                    borderRadius: "6px 6px 0 0",
-                    padding: "4px 8px",
-                  }}
-                >
-                  <Grid item>
-                    <IconButton size="small" onClick={handlePrevMonth} sx={{ color: "white" }}>
-                      <ArrowBackIos fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                  <Grid item>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      {date.toLocaleString("default", { month: "long" })} {year}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    <IconButton size="small" onClick={handleNextMonth} sx={{ color: "white" }}>
-                      <ArrowForwardIos fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-                {/* Days of Week */}
-                <Divider />
-                <Grid container spacing={0.5} sx={{ mt: 1 }}>
-                  {days.map((day, idx) => (
-                    <Grid item xs key={idx}>
-                      <Typography
-                        variant="body2"
-                        align="center"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        {day}
-                      </Typography>
-                    </Grid>
-                  ))}
-                </Grid>
-                {/* Dates */}
-                {weeks.map((week, i) => (
-                  <Grid container spacing={0.5} key={i}>
-                    {week.map((day, j) => {
-                      if (!day) {
-                        return <Grid item xs key={j}></Grid>;
-                      }
-                      const isToday = day === today && month === thisMonth && year === thisYear;
-                      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                      const isHoliday = holidays[dateKey];
-                      return (
-                        <Grid item xs key={j}>
-                          <Typography
-                            variant="body2"
-                            align="center"
-                            sx={{
-                              color: isToday ? "white" : "black",
-                              backgroundColor: isToday
-                                ? "maroon"
-                                : isHoliday
-                                  ? "#E8C999"
-                                  : "transparent",
-                              borderRadius: "50%",
-                              width: 45,
-                              height: 38,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: isHoliday ? "bold" : "500",
-                              margin: "0 auto",
-                            }}
-                            title={isHoliday ? isHoliday.localName : ""}
-                          >
-                            {day}
-                          </Typography>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                ))}
-              </CardContent>
-            </Card>
+       <Box>
+  <Grid item xs="auto">
+    <Card
+      sx={{
+        border: `2px solid ${borderColor}`,
+        marginLeft: "10px",
+        boxShadow: 3,
+        borderRadius: "10px",
+        p: 2,
+        width: "425px",
+        height: "400px", // ✅ fixed height
+        transition: "transform 0.2s ease",
+        "&:hover": { transform: "scale(1.03)" },
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+      }}
+    >
+      <CardContent sx={{ p: 0, width: "100%" }}>
+        {/* Header with month + year + arrows */}
+        <Grid
+          container
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{
+            backgroundColor: settings?.header_color || "#1976d2",
+            color: "white",
+            border: `2px solid ${borderColor}`,
+            borderBottom: "none",
+            borderRadius: "8px 8px 0 0",
+            padding: "10px 8px",
+          }}
+        >
+          <Grid item>
+            <IconButton size="small" onClick={handlePrevMonth} sx={{ color: "white" }}>
+              <ArrowBackIos fontSize="small" />
+            </IconButton>
           </Grid>
-          <Grid item xs="auto">
-            <Card
+          <Grid item>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+              {date.toLocaleString("default", { month: "long" })} {year}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <IconButton size="small" onClick={handleNextMonth} sx={{ color: "white" }}>
+              <ArrowForwardIos fontSize="small" />
+            </IconButton>
+          </Grid>
+        </Grid>
+
+        {/* ✅ Calendar Table */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            borderLeft: `2px solid ${borderColor}`,
+            borderRight: `2px solid ${borderColor}`,
+            borderBottom: `2px solid ${borderColor}`,
+            borderTop: `2px solid ${borderColor}`,
+            borderRadius: "0 0 8px 8px",
+            overflow: "hidden",
+          }}
+        >
+          {/* Days of the week */}
+          {days.map((day, idx) => (
+            <Box
+              key={idx}
               sx={{
-                border: `2px solid ${borderColor}`,
-                marginLeft: "10px",
-                boxShadow: 3,
-                p: 2,
-                width: "425px",
-                height: "196px",
-                borderRadius: "10px",
-                marginTop: "1rem",
-                transition: "transform 0.2s ease",
-                boxShadow: 3,
-                "&:hover": { transform: "scale(1.03)" },
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-start",
-                alignItems: "center",
+                backgroundColor: "#f3f3f3",
+                textAlign: "center",
+                py: 1,
+                fontWeight: "bold",
+                borderBottom: `1px solid ${borderColor}`,
               }}
             >
-              <CardContent sx={{ p: 0, width: "100%", height: "100%" }}>
+              {day}
+            </Box>
+          ))}
+
+          {/* Dates */}
+          {weeks.map((week, i) =>
+            week.map((day, j) => {
+              if (!day) {
+                return (
+                  <Box
+                    key={`${i}-${j}`}
+                    sx={{
+                      height: 45,
+                      backgroundColor: "#fff",
+                    }}
+                  />
+                );
+              }
+
+              const isToday = day === today && month === thisMonth && year === thisYear;
+              const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+                day
+              ).padStart(2, "0")}`;
+              const isHoliday = holidays[dateKey];
+
+              const dayCell = (
                 <Box
                   sx={{
-                    textAlign: "center",
-                    backgroundColor: settings?.header_color || "#1976d2",
-                    color: "white",
-                    borderRadius: "6px 6px 0 0",
-                    padding: "4px 8px",
-                    fontWeight: "bold",
-                    border: `2px solid ${borderColor}`,
-                  }}>
-                  Workload
+                    height: 45,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    backgroundColor: isToday
+                      ? settings?.header_color || "#1976d2"
+                      : isHoliday
+                        ? "#E8C999"
+                        : "#fff",
+                    color: isToday ? "white" : "black",
+                    fontWeight: isHoliday ? "bold" : "500",
+                    cursor: isHoliday ? "pointer" : "default",
+                    "&:hover": {
+                      backgroundColor: isHoliday ? "#F5DFA6" : "#000",
+                      color: isHoliday ? "black" : "white",
+                    },
+                  }}
+                >
+                  {day}
                 </Box>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", border: "2px solid black", borderRadius: "2px", height: "130px" }}>
-                  <Link to={"/faculty_workload"}>
-                    <Button style={{ backgroundColor: mainButtonColor, color: "white", padding: "15px 20px" }}>
-                      Open My Workload
-                    </Button>
-                  </Link>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+              );
+
+              return isHoliday ? (
+                <Tooltip
+                  key={`${i}-${j}`}
+                  title={
+                    <>
+                      <Typography fontWeight="bold">{isHoliday.localName}</Typography>
+                      <Typography variant="caption">{isHoliday.date}</Typography>
+                    </>
+                  }
+                  arrow
+                  placement="top"
+                >
+                  {dayCell}
+                </Tooltip>
+              ) : (
+                <React.Fragment key={`${i}-${j}`}>{dayCell}</React.Fragment>
+              );
+            })
+          )}
         </Box>
+      </CardContent>
+    </Card>
+  </Grid>
+
+  {/* Workload Card (unchanged) */}
+  <Grid item xs="auto">
+    <Card
+      sx={{
+        border: `2px solid ${borderColor}`,
+        marginLeft: "10px",
+        boxShadow: 3,
+        p: 2,
+        width: "425px",
+        height: "196px",
+        borderRadius: "10px",
+        marginTop: "1rem",
+        transition: "transform 0.2s ease",
+        "&:hover": { transform: "scale(1.03)" },
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+      }}
+    >
+      <CardContent sx={{ p: 0, width: "100%", height: "100%" }}>
+        <Box
+          sx={{
+            textAlign: "center",
+            backgroundColor: settings?.header_color || "#1976d2",
+            color: "white",
+            borderRadius: "6px 6px 0 0",
+            padding: "4px 8px",
+            fontWeight: "bold",
+            border: `2px solid ${borderColor}`,
+          }}
+        >
+          Workload
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid black",
+            borderRadius: "2px",
+            height: "130px",
+          }}
+        >
+          <Link to={"/faculty_workload"}>
+            <Button
+              style={{
+                backgroundColor: mainButtonColor,
+                color: "white",
+                padding: "15px 20px",
+              }}
+            >
+              Open My Workload
+            </Button>
+          </Link>
+        </Box>
+      </CardContent>
+    </Card>
+  </Grid>
+</Box>
+
       </Box>
     </Box>
   );

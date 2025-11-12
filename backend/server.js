@@ -14301,6 +14301,17 @@ app.get("/api/student_status/:person_id", async (req, res) => {
   }
 });
 
+// ✅ Count how many registrar roles exist
+app.get("/api/registrar_count", async (req, res) => {
+  try {
+    const [rows] = await db3.query("SELECT COUNT(*) AS count FROM user_accounts WHERE role = 'registrar'");
+    res.json({ count: rows[0].count });
+  } catch (error) {
+    console.error("Error fetching registrar count:", error);
+    res.status(500).json({ message: "Server error while fetching registrar count" });
+  }
+});
+
 
 
 http.listen(5000, () => {

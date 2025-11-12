@@ -17,15 +17,16 @@ import {
   Stack,
   Divider,
   Paper,
+  Tooltip,
 } from "@mui/material";
 import GroupIcon from "@mui/icons-material/Groups";
 import SchoolIcon from "@mui/icons-material/School";
 import PersonIcon from "@mui/icons-material/Person";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ExaminationProfile from "../registrar/ExaminationProfile";
-
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 const Dashboard = ({ profileImage, setProfileImage }) => {
 
@@ -133,24 +134,44 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     }
   }, [selectedDepartment]);
 
+  const [registrarCount, setRegistrarCount] = useState(0);
+
+  useEffect(() => {
+    const fetchRegistrarCount = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/registrar_count");
+        setRegistrarCount(res.data.count || 0);
+      } catch (error) {
+        console.error("Error fetching registrar count:", error);
+      }
+    };
+    fetchRegistrarCount();
+  }, []);
+
   const stats = [
     {
       label: "Total Applicants",
       value: enrolledCount,
       icon: <GroupIcon fontSize="large" />,
-      color: "#F6D167",
+      color: "#F6D167", // soft yellow
     },
     {
       label: "Enrolled Students",
       value: acceptedCount,
       icon: <SchoolIcon fontSize="large" />,
-      color: "#84B082",
+      color: "#84B082", // green
     },
     {
       label: "Professors",
       value: professorCount,
       icon: <PersonIcon fontSize="large" />,
-      color: "#A3C4F3",
+      color: "#A3C4F3", // blue
+    },
+    {
+      label: "Total Registrar",
+      value: registrarCount,
+      icon: <AdminPanelSettingsIcon fontSize="large" />, // new icon
+      color: "#FFD8A9", // light orange
     },
   ];
 
@@ -161,7 +182,6 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const year = date.getFullYear();
   const month = date.getMonth();
 
-  // Get today's date in Manila timezone (UTC+8)
   const now = new Date();
   const manilaDate = new Date(
     now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
@@ -170,12 +190,9 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
   const thisMonth = manilaDate.getMonth();
   const thisYear = manilaDate.getFullYear();
 
-  // First day of the month
   const firstDay = new Date(year, month, 1).getDay();
-  // Total days in the month
   const totalDays = new Date(year, month + 1, 0).getDate();
 
-  // Build weeks array
   const weeks = [];
   let currentDay = 1 - firstDay;
 
@@ -192,23 +209,20 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
     weeks.push(week);
   }
 
-  // Handle month navigation
-  const handlePrevMonth = () => {
-    setDate(new Date(year, month - 1, 1));
-  };
+  const handlePrevMonth = () => setDate(new Date(year, month - 1, 1));
+  const handleNextMonth = () => setDate(new Date(year, month + 1, 1));
 
-  const handleNextMonth = () => {
-    setDate(new Date(year, month + 1, 1));
-  };
 
   const [holidays, setHolidays] = useState({});
 
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const res = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`);
+        const res = await axios.get(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/PH`
+        );
         const lookup = {};
-        res.data.forEach(h => {
+        res.data.forEach((h) => {
           lookup[h.date] = h;
         });
         setHolidays(lookup);
@@ -217,9 +231,9 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
         setHolidays({});
       }
     };
-
     fetchHolidays();
-  }, [year]);  // 👈 refetch when year changes
+  }, [year]);
+
 
   const [monthlyApplicants, setMonthlyApplicants] = useState([]);
 
@@ -431,21 +445,22 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
 
 
 
-      {/* Stats Section */}
-      <Grid container spacing={1}>
+      {/* ✅ Stats Section (4 in 1 row) */}
+      <Grid container spacing={2} justifyContent="center">
         {stats.map((stat, i) => (
-          <Grid item xs={12} sm={6} md={4} mt={2} key={i}>
+          <Grid item xs={12} sm={6} md={3} key={i}>
             <Card
               sx={{
                 display: "flex",
-                border: `2px solid ${borderColor}`,
                 alignItems: "center",
-                marginLeft: "10px",
+                justifyContent: "flex-start",
+                border: `2px solid ${borderColor}`,
                 backgroundColor: "#fef9e1",
-
                 height: "100px",
                 p: 3,
                 borderRadius: 3,
+                marginLeft: "10px",
+                mt: "20px",
                 transition: "transform 0.2s ease",
                 "&:hover": { transform: "scale(1.03)" },
               }}
@@ -465,8 +480,14 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
               >
                 {stat.icon}
               </Box>
+
               <Box>
-                <Typography variant="subtitle2" style={{ color: subtitleColor, }} fontSize={20} fontWeight={1200}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ color: subtitleColor }}
+                  fontSize={20}
+                  fontWeight={1200}
+                >
                   {stat.label}
                 </Typography>
                 <Typography variant="h5" fontWeight="bold">
@@ -477,6 +498,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
           </Grid>
         ))}
       </Grid>
+
 
       {/* Department Section */}
       <Grid container spacing={3} sx={{ mt: 6 }}>
@@ -500,11 +522,11 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
               boxShadow: 3,
               p: 2,
               width: 480,
-              height: 325,
+              height: 400,
               marginTop: "-70px",
               display: "flex",
+              borderRadius: "10px",
               transition: "transform 0.2s ease",
-              boxShadow: 3,
               "&:hover": { transform: "scale(1.03)" },
               flexDirection: "column",
               justifyContent: "flex-start",
@@ -520,8 +542,10 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
                 sx={{
                   backgroundColor: settings?.header_color || "#1976d2",
                   color: "white",
-                  borderRadius: "6px 6px 0 0",
-                  padding: "4px 8px",
+                  border: `2px solid ${borderColor}`,
+                  borderBottom: "none", // prevent double border with body
+                  borderRadius: "8px 8px 0 0",
+                  padding: "10px 8px",
                 }}
               >
                 <Grid item>
@@ -541,58 +565,101 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
                 </Grid>
               </Grid>
 
-              <Divider />
-              <Grid container spacing={0.5} sx={{ mt: 1 }}>
-                {days.map((day, idx) => (
-                  <Grid item xs key={idx}>
-                    <Typography variant="body2" align="center" sx={{ fontWeight: "bold", }}>
-                      {day}
-                    </Typography>
-                  </Grid>
-                ))}
-              </Grid>
+              {/* Calendar Table */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(7, 1fr)",
+                  borderLeft: `2px solid ${borderColor}`,
+                  borderRight: `2px solid ${borderColor}`,
+                  borderBottom: `2px solid ${borderColor}`,
+                  borderTop: `2px solid ${borderColor}`,
+                  borderRadius: "0 0 8px 8px",
+                  overflow: "hidden",
 
-              {weeks.map((week, i) => (
-                <Grid container spacing={0.5} key={i}>
-                  {week.map((day, j) => {
-                    if (!day) return <Grid item xs key={j}></Grid>;
+                }}
+              >
+                {/* Days of the week */}
+                {days.map((day, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      backgroundColor: "#f3f3f3",
+                      textAlign: "center",
+                      py: 1,
+                      fontWeight: "bold",
+                      borderBottom: `1px solid ${borderColor}`,
+                    }}
+                  >
+                    {day}
+                  </Box>
+                ))}
+
+                {/* Dates */}
+                {weeks.map((week, i) =>
+                  week.map((day, j) => {
+                    if (!day) {
+                      return (
+                        <Box
+                          key={`${i}-${j}`}
+                          sx={{
+                            height: 45,
+                            backgroundColor: "#fff",
+                          }}
+                        />
+                      );
+                    }
 
                     const isToday = day === today && month === thisMonth && year === thisYear;
-                    const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
-                      day
-                    ).padStart(2, "0")}`;
+                    const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                     const isHoliday = holidays[dateKey];
 
-                    return (
-                      <Grid item xs key={j}>
-                        <Typography
-                          variant="body2"
-                          align="center"
-                          sx={{
-                            color: isToday ? "white" : "black",
-                            backgroundColor: isToday
-                              ? settings?.header_color || "#1976d2"
-                              : isHoliday
-                                ? "#E8C999"
-                                : "transparent",
-                            borderRadius: "50%",
-                            width: 45,
-                            height: 38,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: isHoliday ? "bold" : "500",
-                            margin: "0 auto",
-                          }}
-                          title={isHoliday ? isHoliday.localName : ""}
-                        >
-                          {day}
-                        </Typography>
-                      </Grid>
+                    const dayCell = (
+                      <Box
+                        sx={{
+                          height: 45,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: "50%",
+                          backgroundColor: isToday
+                            ? settings?.header_color || "#1976d2"
+                            : isHoliday
+                              ? "#E8C999"
+                              : "#fff",
+                          color: isToday ? "white" : "black",
+                          fontWeight: isHoliday ? "bold" : "500",
+                          cursor: isHoliday ? "pointer" : "default",
+                          "&:hover": {
+                            backgroundColor: isHoliday ? "#F5DFA6" : "#000",
+                            color: isHoliday ? "black" : "white",
+                          },
+                        }}
+                      >
+                        {day}
+                      </Box>
                     );
-                  })}
-                </Grid>
-              ))}
+
+                    return isHoliday ? (
+                      <Tooltip
+                        key={`${i}-${j}`}
+                        title={
+                          <>
+                            <Typography fontWeight="bold">{isHoliday.localName}</Typography>
+                            <Typography variant="caption">{isHoliday.date}</Typography>
+                          </>
+                        }
+                        arrow
+                        placement="top"
+                      >
+                        {dayCell}
+                      </Tooltip>
+                    ) : (
+                      <React.Fragment key={`${i}-${j}`}>{dayCell}</React.Fragment>
+                    );
+                  })
+                )}
+              </Box>
             </CardContent>
           </Card>
 
@@ -674,7 +741,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
               p: 1,
               borderRadius: 3,
               border: `2px solid ${borderColor}`,
-              height: 600,
+              height: 660,
               backgroundColor: "#f1f1f1",
               marginTop: "-30px",
               transition: "transform 0.2s ease",
@@ -718,7 +785,7 @@ const Dashboard = ({ profileImage, setProfileImage }) => {
               p: 1,
               borderRadius: 3,
               border: `2px solid ${borderColor}`,
-              height: 600,
+              height: 660,
               backgroundColor: "#f1f1f1",
               marginTop: "-30px",
               transition: "transform 0.2s ease",

@@ -783,7 +783,7 @@ const ApplicantDashboard = (props) => {
                             transform: "scale(1.05)",
                           },
                           width: 245, // same width
-                          height: 275, // same height
+                          height: 300, // same height
                           display: "flex",
                           justifyContent: "center",
                           alignItems: "center",
@@ -874,7 +874,7 @@ const ApplicantDashboard = (props) => {
                     transition: "transform 0.2s ease",
                     boxShadow: 3,
                     "&:hover": { transform: "scale(1.03)" },
-                    height: "114px",
+                    height: "90px",
                     borderRadius: "10px",
                     backgroundColor: "#fffaf5",
                     border: `2px solid ${borderColor}`,
@@ -1081,12 +1081,13 @@ const ApplicantDashboard = (props) => {
           <Grid item xs="auto">
             <Card
               sx={{
-                border: `2px solid ${borderColor}`,
                 marginLeft: "10px",
                 boxShadow: 3,
                 p: 2,
+                border: `2px solid ${borderColor}`,
+                borderRadius: "10px",
                 width: "425px",
-                height: "405px",
+                height: "406px",
                 transition: "transform 0.2s ease",
                 "&:hover": { transform: "scale(1.03)" },
                 display: "flex",
@@ -1104,7 +1105,9 @@ const ApplicantDashboard = (props) => {
                   sx={{
                     backgroundColor: settings?.header_color || "#1976d2",
                     color: "white",
-                    border: "2px solid black",
+                    border: `2px solid ${borderColor}`,
+                    borderBottom: "none", // prevent double border with body
+                    borderRadius: "8px 8px 0 0",
                     padding: "10px 8px",
                   }}
                 >
@@ -1125,26 +1128,30 @@ const ApplicantDashboard = (props) => {
                   </Grid>
                 </Grid>
 
-       
                 {/* Calendar Table */}
                 <Box
                   sx={{
                     display: "grid",
                     gridTemplateColumns: "repeat(7, 1fr)",
-                    border: "2px solid black",
-                    borderCollapse: "collapse",
+                    borderLeft: `2px solid ${borderColor}`,
+                    borderRight: `2px solid ${borderColor}`,
+                    borderBottom: `2px solid ${borderColor}`, // ✅ add bottom border here
+                    borderTop: `2px solid ${borderColor}`,
+                       borderRadius: "10px",
+                    borderRadius: "0 0 8px 8px", // ✅ match with header rounding
+                    overflow: "hidden",
                   }}
                 >
-                  {/* Days of the week row */}
+                  {/* Days of the week */}
                   {days.map((day, idx) => (
                     <Box
                       key={idx}
                       sx={{
-                        border: "1px solid black",
                         backgroundColor: "#f3f3f3",
                         textAlign: "center",
                         py: 1,
                         fontWeight: "bold",
+                        borderBottom: `1px solid ${borderColor}`,
                       }}
                     >
                       {day}
@@ -1159,9 +1166,9 @@ const ApplicantDashboard = (props) => {
                           <Box
                             key={`${i}-${j}`}
                             sx={{
-                              border: "1px solid black",
                               height: 45,
                               backgroundColor: "#fff",
+                              
                             }}
                           />
                         );
@@ -1177,11 +1184,11 @@ const ApplicantDashboard = (props) => {
                       const dayCell = (
                         <Box
                           sx={{
-                            border: "1px solid black",
                             height: 45,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
+                           borderRadius: "50%",
                             backgroundColor: isToday
                               ? settings?.header_color || "#1976d2"
                               : isHoliday
@@ -1191,7 +1198,8 @@ const ApplicantDashboard = (props) => {
                             fontWeight: isHoliday ? "bold" : "500",
                             cursor: isHoliday ? "pointer" : "default",
                             "&:hover": {
-                              backgroundColor: isHoliday ? "#F5DFA6" : "#f1f1f1",
+                              backgroundColor: isHoliday ? "#F5DFA6" : "#000",
+                              color: isHoliday ? "black" : "white",
                             },
                           }}
                         >
