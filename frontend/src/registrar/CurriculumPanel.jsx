@@ -367,10 +367,10 @@ const CurriculumPanel = () => {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
-                <th style={{ border: `2px solid ${borderColor}`, }}>ID</th>
-                <th style={{ border: `2px solid ${borderColor}`, border: `2px solid ${borderColor}`, }}>Year</th>
-                <th style={{ border: `2px solid ${borderColor}`, }}>Program</th>
-                <th style={{ border: `2px solid ${borderColor}`, }}>Status</th>
+                <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff"  }}>ID</th>
+                <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Year</th>
+                <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Program</th>
+                <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Status</th>
               </tr>
             </thead>
 
@@ -413,7 +413,7 @@ const CurriculumPanel = () => {
                       }
                       style={{
                         backgroundColor:
-                          item.lock_status === 1 ? "green" : "maroon",
+                          item.lock_status === 1 ? "green" : "#9E0000",
                         color: "white",
                         border: "none",
                         borderRadius: "6px",

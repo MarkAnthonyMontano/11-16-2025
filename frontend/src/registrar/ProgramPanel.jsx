@@ -286,12 +286,14 @@ const ProgramPanel = () => {
     },
     table: { width: "100%", borderCollapse: "collapse" },
     th: {
-      backgroundColor: "#f1f1f1",
+  
       padding: "15px",
       textAlign: "left",
       fontWeight: "bold",
       border: `2px solid ${borderColor}`,
       fontSize: "16px",
+      backgroundColor: settings?.header_color || "#1976d2",
+      color: "#fff"
     },
     td: {
       padding: "12px",
@@ -301,7 +303,7 @@ const ProgramPanel = () => {
       border: `2px solid ${borderColor}`,
     },
     editButton: {
-      backgroundColor: "#2E7D32",
+      backgroundColor: "green",
       color: "white",
       border: "none",
       borderRadius: "5px",
@@ -316,7 +318,7 @@ const ProgramPanel = () => {
       gap: "5px",
     },
     deleteButton: {
-      backgroundColor: "#800000",
+      backgroundColor: "#9E0000",
       color: "white",
       border: "none",
       borderRadius: "5px",

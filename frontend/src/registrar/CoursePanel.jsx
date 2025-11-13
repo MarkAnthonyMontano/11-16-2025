@@ -399,12 +399,12 @@ const CoursePanel = () => {
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ border: `2px solid ${borderColor}` }}>ID</th>
-                  <th style={{ border: `2px solid ${borderColor}` }}>Description</th>
-                  <th style={{ border: `2px solid ${borderColor}` }}>Code</th>
-                  <th style={{ border: `2px solid ${borderColor}` }}>Course Unit</th>
-                  <th style={{ border: `2px solid ${borderColor}` }}>Lab Unit</th>
-                  <th style={{ border: `2px solid ${borderColor}` }}>Actions</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>ID</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Description</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Code</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Course Unit</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Lab Unit</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -420,7 +420,7 @@ const CoursePanel = () => {
                         <button
                           onClick={() => handleEdit(c)}
                           style={{
-                            backgroundColor: "#4CAF50",
+                            backgroundColor: "green",
                             color: "white",
                             border: "none",
                             padding: "6px 0",
@@ -434,7 +434,7 @@ const CoursePanel = () => {
                         <button
                           onClick={() => handleDelete(c.course_id)}
                           style={{
-                            backgroundColor: "#B22222",
+                            backgroundColor: "#9E0000",
                             color: "white",
                             border: "none",
                             padding: "6px 0",

@@ -342,9 +342,9 @@ const RequirementsForm = () => {
                       variant="contained"
                       size="small"
                       sx={{
-                        backgroundColor: "#B22222",
+                        backgroundColor: "#9E0000",
                         color: "white",
-                        "&:hover": { backgroundColor: "#8B0000" },
+                        
                       }}
                       onClick={() => handleDelete(req.id)}
                     >

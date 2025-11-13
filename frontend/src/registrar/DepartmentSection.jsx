@@ -343,8 +343,9 @@ const DepartmentSection = () => {
                     style={{
                       border: `2px solid ${borderColor}`,
                       padding: "8px",
+                       backgroundColor: settings?.header_color || "#1976d2",
                       textAlign: "center",
-                      color: "maroon",
+                      color: "#fff",
                     }}
                   >
                     Curriculum Name
@@ -353,8 +354,9 @@ const DepartmentSection = () => {
                     style={{
                       border: `2px solid ${borderColor}`,
                       padding: "8px",
+                       backgroundColor: settings?.header_color || "#1976d2",
                       textAlign: "center",
-                      color: "maroon",
+                     color: "#fff",
                     }}
                   >
                     Section Description
@@ -363,8 +365,9 @@ const DepartmentSection = () => {
                     style={{
                       border: `2px solid ${borderColor}`,
                       padding: "8px",
+                       backgroundColor: settings?.header_color || "#1976d2",
                       textAlign: "center",
-                      color: "maroon",
+                      color: "#fff",
                     }}
                   >
                     Status

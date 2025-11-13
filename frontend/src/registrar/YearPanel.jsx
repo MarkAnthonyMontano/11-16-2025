@@ -173,7 +173,7 @@ const YearPanel = () => {
             style={{
               width: "100%",
               padding: "12px",
-              backgroundColor: settings?.header_color || "#1976d2",
+              backgroundColor: "#1976d2",
               color: "white",
               fontSize: "16px",
               border: "none",
@@ -182,8 +182,7 @@ const YearPanel = () => {
               fontWeight: "bold",
               transition: "0.3s",
             }}
-            onMouseOver={(e) => (e.target.style.backgroundColor = "#1459b5")}
-            onMouseOut={(e) => (e.target.style.backgroundColor = settings?.header_color || "#1976d2")}
+
           >
             Save Year
           </button>

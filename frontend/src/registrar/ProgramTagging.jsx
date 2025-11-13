@@ -384,27 +384,86 @@ const ProgramTagging = () => {
           <div style={styles.taggedProgramsContainer}>
             {taggedPrograms.length > 0 ? (
               <table style={styles.table}>
-                <thead style={{ background: "#f1f1f1" }}>
+                <thead>
                   <tr>
-                    <th style={styles.th}>Curriculum</th>
-                    <th style={styles.th}>Course</th>
-                    <th style={styles.th}>Year Level</th>
-                    <th style={styles.th}>Semester</th>
-                    <th style={styles.th}>Actions</th>
+                    <th
+                      style={{
+                        ...styles.th,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        border: `2px solid ${borderColor}`,
+                        color: "white",
+                      }}
+                    >
+                      Curriculum
+                    </th>
+                    <th
+                      style={{
+                        ...styles.th,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        border: `2px solid ${borderColor}`,
+                        color: "white",
+                      }}
+                    >
+                      Course
+                    </th>
+                    <th
+                      style={{
+                        ...styles.th,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        border: `2px solid ${borderColor}`,
+                        color: "white",
+                      }}
+                    >
+                      Year Level
+                    </th>
+                    <th
+                      style={{
+                        ...styles.th,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        border: `2px solid ${borderColor}`,
+                        color: "white",
+                      }}
+                    >
+                      Semester
+                    </th>
+                    <th
+                      style={{
+                        ...styles.th,
+                        backgroundColor: settings?.header_color || "#1976d2",
+                        border: `2px solid ${borderColor}`,
+                        color: "white",
+                      }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {taggedPrograms.map((program) => (
                     <tr key={program.program_tagging_id}>
-                      <td style={styles.td}>{program.curriculum_description}</td>
-                      <td style={styles.td}>{program.course_description}</td>
-                      <td style={styles.td}>{program.year_level_description}</td>
-                      <td style={styles.td}>{program.semester_description}</td>
-                      <td style={{ ...styles.td, whiteSpace: "nowrap" }}>
+                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                        {program.curriculum_description}
+                      </td>
+                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                        {program.course_description}
+                      </td>
+                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                        {program.year_level_description}
+                      </td>
+                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                        {program.semester_description}
+                      </td>
+                      <td
+                        style={{
+                          ...styles.td,
+                          whiteSpace: "nowrap",
+                          border: `1px solid ${borderColor}`,
+                        }}
+                      >
                         <button
                           onClick={() => handleEdit(program)}
                           style={{
-                            backgroundColor: "#2E7D32",
+                            backgroundColor: "green",
                             color: "white",
                             border: "none",
                             borderRadius: "5px",
@@ -425,7 +484,7 @@ const ProgramTagging = () => {
                         <button
                           onClick={() => handleDelete(program.program_tagging_id)}
                           style={{
-                            backgroundColor: "#800000",
+                            backgroundColor: "#9E0000",
                             color: "white",
                             border: "none",
                             borderRadius: "5px",
@@ -446,6 +505,7 @@ const ProgramTagging = () => {
                   ))}
                 </tbody>
               </table>
+
             ) : (
               <p>No tagged programs available.</p>
             )}

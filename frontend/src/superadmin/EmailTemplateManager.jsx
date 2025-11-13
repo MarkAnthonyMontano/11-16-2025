@@ -402,11 +402,11 @@ export default function EmailTemplateManager() {
                       backgroundColor: settings?.header_color || "#1976d2", // Header color from settings
                     }}
                   >
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}` }}>#</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}` }}>Gmail Account</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}` }}>Department</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}` }}>Active</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}` }}>Actions</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>#</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Gmail Account</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Department</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Active</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
 

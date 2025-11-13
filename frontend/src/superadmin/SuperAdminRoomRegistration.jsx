@@ -394,10 +394,10 @@ const SuperAdminRoomRegistration = () => {
                           variant="contained"
                           size="small"
                           sx={{
-                            backgroundColor: "#4CAF50",
+                            backgroundColor: "green",
                             color: "white",
                             mr: 1,
-                            "&:hover": { backgroundColor: "#45A049" },
+                    
                           }}
                           onClick={() => handleEditRoom(room)}
                         >
@@ -407,9 +407,9 @@ const SuperAdminRoomRegistration = () => {
                           variant="contained"
                           size="small"
                           sx={{
-                            backgroundColor: "#B22222",
+                            backgroundColor: "#9E0000",
                             color: "white",
-                            "&:hover": { backgroundColor: "#8B0000" },
+                    
                           }}
                           onClick={() => handleDeleteRoom(room.room_id)}
                         >
