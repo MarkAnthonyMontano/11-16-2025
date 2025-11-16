@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, forwardRef } from "react";
 import { SettingsContext } from "../App";
 import axios from "axios";
-import { Box, TextField, Container, Typography } from "@mui/material";
+import { Box, TextField, Container, Typography, Button } from "@mui/material";
 import FreeTuitionImage from "../assets/FREETUITION.png";
 import EaristLogo from "../assets/EaristLogo.png";
 import '../styles/Print.css'
@@ -15,7 +15,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
   const settings = useContext(SettingsContext);
   const [fetchedLogo, setFetchedLogo] = useState(null);
   const [companyName, setCompanyName] = useState("");
-
+  const [snack, setSnack] = useState({ open: false, message: "", severity: "" });
   useEffect(() => {
     if (settings) {
       // ✅ load dynamic logo
@@ -90,6 +90,8 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
     mother_contact: "", mother_occupation: "", mother_income: "", guardian: "", guardian_family_name: "", guardian_given_name: "",
     guardian_middle_name: "", guardian_ext: "", guardian_nickname: "", guardian_address: "", guardian_contact: "", guardian_email: "", generalAverage1: "",
   });
+
+
 
   const [userID, setUserID] = useState("");
   const [user, setUser] = useState("");
@@ -423,8 +425,6 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
         setYearLevelDescription(yearLevelDescription);
         setYearDescription(yearDesc);
 
-        console.log(yearLevelDescription);
-
         // 2. Fetch full student data (COR info)
         const corResponse = await axios.get(`http://localhost:5000/student-data/${studentNum}`);
         const fullData = corResponse.data;
@@ -463,9 +463,12 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
   }, []);
 
   const totalCourseUnits = enrolled.reduce((sum, item) => sum + (parseFloat(item.course_unit) || 0), 0);
+  const totalLecFees = enrolled.reduce((sum, item) => sum + (parseFloat(item.total_lec_value) || 0), 0);
+  const totalLabFees = enrolled.reduce((sum, item) => sum + (parseFloat(item.total_lab_value) || 0), 0);
   const totalLabUnits = enrolled.reduce((sum, item) => sum + (parseFloat(item.lab_unit) || 0), 0);
   const totalCombined = totalCourseUnits + totalLabUnits;
-
+  
+  const [tosf, setTosfData] = useState([]);
   const [curriculumOptions, setCurriculumOptions] = useState([]);
 
   useEffect(() => {
@@ -491,6 +494,141 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
     )?.program_description || (person?.program ?? "")
 
   }
+
+  const fetchTosf = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/tosf`);
+      setTosfData(res.data);
+      console.log(res.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      showSnackbar("Error fetching data", "error");
+    }
+  };
+
+  useEffect(() => {
+    fetchTosf();
+  }, []);
+
+  const [requestedData, setRequestedData] = useState({
+    campus_name: "",
+    student_number: "",
+    learner_reference_number: "",
+    last_name: "",
+    given_name: "",
+    middle_initial: "",
+    degree_program: "",
+    year_level: "",
+    sex: "",
+    email_address: "",
+    phone_number: "",
+    laboratory_units: 0,
+    computer_units: 0,
+    academic_units_enrolled: 0,
+    academic_units_nstp_enrolled: 0,
+    tuition_fees: 0,
+    nstp_fees: 0,
+    athletic_fees: 0,
+    computer_fees: 0,
+    cultural_fees: 0,
+    development_fees: 0,
+    guidance_fees: 0,
+    laboratory_fees: 0,
+    library_fees: 0,
+    medical_and_dental_fees: 0,
+    registration_fees: 0,
+    school_id_fees: 0,
+    total_tosf: 0,
+    remark: "",
+    active_school_year_id: 1,
+  });
+
+  useEffect(() => {
+    if (!data[0] || !tosf[0] || !enrolled) return;
+
+    const totalCourseUnits = enrolled.reduce((sum, item) => sum + (parseFloat(item.course_unit) || 0), 0);
+    const totalLecFees = enrolled.reduce((sum, item) => sum + (parseFloat(item.total_lec_value) || 0), 0);
+    const totalLabFees = enrolled.reduce((sum, item) => sum + (parseFloat(item.total_lab_value) || 0), 0);
+    const totalLabUnits = enrolled.reduce((sum, item) => sum + (parseFloat(item.lab_unit) || 0), 0);
+    const totalCombined = totalCourseUnits + totalLabUnits;
+    const middleInitial = data[0]?.middle_name?.[0] || "";
+    const campusName = data[0]?.campus === 1 ? "Manila" : "Cavite";
+    const gender = data[0]?.gender === 1 ? "Female" : "Male";
+    const totalSum = totalLecFees + totalLabFees;
+    const totalTotalTOSF =
+      totalLecFees +
+      totalLabFees +
+      Number(tosf[0]?.cultural_fee || 0) +
+      Number(tosf[0]?.athletic_fee || 0) +
+      Number(tosf[0]?.developmental_fee || 0) +
+      Number(tosf[0]?.guidance_fee || 0) +
+      Number(tosf[0]?.library_fee || 0) +
+      Number(tosf[0]?.medical_and_dental_fee || 0) +
+      Number(tosf[0]?.registration_fee || 0) +
+      Number(tosf[0]?.computer_fee || 0);
+
+    setRequestedData({
+      campus_name: campusName,
+      student_number: data[0]?.student_number,
+      learner_reference_number: data[0]?.lrnNumber,
+      last_name: data[0]?.last_name,
+      given_name: data[0]?.first_name,
+      middle_initial: middleInitial,
+      degree_program: data[0]?.program,
+      year_level: year_Level_Description,
+      sex: gender,
+      email_address: data[0]?.email,
+      phone_number: data[0]?.cellphoneNumber,
+      laboratory_units: totalLabUnits,
+      computer_units: 3, // ONGOING
+      academic_units_enrolled: totalCombined,
+      academic_units_nstp_enrolled: 3,
+      tuition_fees: totalSum,
+      nstp_fees: 1000, // ONGOING
+      athletic_fees: tosf[0]?.athletic_fee || 0,
+      computer_fees: tosf[0]?.computer_fee || 0,
+      cultural_fees: tosf[0]?.cultural_fee || 0,
+      development_fees: tosf[0]?.developmental_fee || 0,
+      guidance_fees: tosf[0]?.guidance_fee || 0,
+      laboratory_fees: totalLabFees,
+      library_fees: tosf[0]?.library_fee || 0,
+      medical_and_dental_fees: tosf[0]?.medical_and_dental_fee || 0,
+      registration_fees: 2000, // ONGOING
+      school_id_fees: 100, // ONGOING
+      total_tosf: totalTotalTOSF,
+      remark: "", // ONGOING  
+      active_school_year_id: data[0]?.active_school_year_id,
+    });
+  }, [data, tosf, enrolled]);
+
+  const handleSaveToUnifast = async () => {
+    try {
+      const res = await axios.post(`http://localhost:5000/save_to_unifast`, requestedData);
+      if (res.data.success) {
+        setSnack({ open: true, message: res.data.message, severity: "success" });
+      } else {
+        setSnack({ open: true, message: res.data.message || "Failed to save data", severity: "error" });
+      }
+    } catch (error) {
+      console.error(error);
+      setSnack({ open: true, message: "Server error while saving data", severity: "error" });
+    }
+  };
+
+  const handleSaveToMatriculation = async () => {
+    try {
+      const res = await axios.post(`http://localhost:5000/save_to_matriculation`, requestedData);
+      if (res.data.success) {
+        setSnack({ open: true, message: res.data.message, severity: "success" });
+      } else {
+        setSnack({ open: true, message: res.data.message || "Failed to save data", severity: "error" });
+      }
+    } catch (error) {
+      console.error(error);
+      setSnack({ open: true, message: "Server error while saving data", severity: "error" });
+    }
+  };
+
 
   // 🔒 Disable right-click
   document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -526,7 +664,8 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
   return (
 
     <Container className="mb-[4rem]">
-
+      <Button onClick={handleSaveToUnifast}>Save to Unifast</Button>
+      <Button onClick={handleSaveToMatriculation}>Save to Matriculation</Button>
       <div className="flex-container">
         <div className="section">
 
@@ -861,16 +1000,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                           background: "none",
                         }}
                       />
-                      {
-                        curriculumOptions.length > 0
-                          ? curriculumOptions.find(
-                            (item) =>
-                              item?.curriculum_id?.toString() ===
-                              (person?.program ?? "").toString()
-                          )?.program_description?.toUpperCase() ||
-                          (person?.program?.toString()?.toUpperCase() ?? "")
-                          : "LOADING..."
-                      }
+                      
                     </td>
                   </tr>
 
@@ -1301,6 +1431,32 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       Tuition
                     </td>
+                    <td
+                      colSpan={2}
+                      style={{
+                        color: "black",
+                        height: "0.1in",
+                        fontSize: "50%",
+                        backgroundColor: "gray",
+                        border: "1px solid black",
+                        textAlign: "center",
+                      }}
+                    >
+                      Lec Value
+                    </td>
+                    <td
+                      colSpan={2}
+                      style={{
+                        color: "black",
+                        height: "0.1in",
+                        fontSize: "50%",
+                        backgroundColor: "gray",
+                        border: "1px solid black",
+                        textAlign: "center",
+                      }}
+                    >
+                      Lab Value
+                    </td>
                   </tr>
                   {enrolled.map((item, index) => (
                     <tr key={index}>
@@ -1391,6 +1547,34 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                             fontSize: "12px",
                           }}
                           readOnly
+                        />
+                      </td>
+                      <td colSpan={2} style={{ border: "1px solid black" }}>
+                        <input
+                          type="text"
+                          value={item.total_lec_value ?? ""}
+                          readOnly
+                          style={{
+                            width: "98%",
+                            border: "none",
+                            background: "none",
+                            textAlign: "center",
+                            fontSize: "12px",
+                          }}
+                        />
+                      </td>
+                      <td colSpan={2} style={{ border: "1px solid black" }}>
+                        <input
+                          type="text"
+                          value={item.total_lab_value ?? ""}
+                          readOnly
+                          style={{
+                            width: "98%",
+                            border: "none",
+                            background: "none",
+                            textAlign: "center",
+                            fontSize: "12px",
+                          }}
                         />
                       </td>
                       <td colSpan={4} style={{ border: "1px solid black" }}>
@@ -1514,6 +1698,30 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       {totalCombined}
                     </td>
+                    <td
+                      colSpan={2}
+                      style={{
+                        fontSize: "12px",
+                        color: "black",
+                        fontFamily: "Arial",
+                        textAlign: "center",
+
+                      }}
+                    >
+                      {totalLecFees}
+                    </td>
+                    <td
+                      colSpan={2}
+                      style={{
+                        fontSize: "12px",
+                        color: "black",
+                        fontFamily: "Arial",
+                        textAlign: "center",
+
+                      }}
+                    >
+                      {totalLabFees}
+                    </td>
 
                     <td
                       colSpan={2}
@@ -1622,6 +1830,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={totalLecFees + totalLabFees}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1697,6 +1906,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.athletic_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1774,6 +1984,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.cultural_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1854,6 +2065,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.developmental_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -1934,6 +2146,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.guidance_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2014,6 +2227,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.library_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2067,6 +2281,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.medical_and_dental_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2145,6 +2360,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.registration_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2211,6 +2427,7 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                        value={tosf[0]?.computer_fee || "0"}
                         readOnly
                         style={{
                           textAlign: "center",
@@ -2360,6 +2577,17 @@ const CertificateOfRegistration = forwardRef(({ student_number }, divToPrintRef)
                     >
                       <input
                         type="text"
+                         value={
+                          (totalLecFees + totalLabFees) +
+                          Number(tosf[0]?.cultural_fee || 0) +
+                          Number(tosf[0]?.athletic_fee || 0) +
+                          Number(tosf[0]?.developmental_fee || 0) +
+                          Number(tosf[0]?.guidance_fee || 0) +
+                          Number(tosf[0]?.library_fee || 0) +
+                          Number(tosf[0]?.medical_and_dental_fee || 0) +
+                          Number(tosf[0]?.registration_fee || 0) +
+                          Number(tosf[0]?.computer_fee || 0)
+                        }
                         readOnly
                         style={{
                           textAlign: "center",

@@ -27,7 +27,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 import LoadingOverlay from '../components/LoadingOverlay';
 import { Message } from "@mui/icons-material";
 import { FcPrint } from "react-icons/fc";
-
+import EaristLogo from '../assets/EaristLogo.png';
 
 const FacultyEvaluation = () => {
 
@@ -93,6 +93,9 @@ const FacultyEvaluation = () => {
         lname: "",
         profile_image: "",
     });
+
+    // Add a ref for the print content
+    const divToPrintRef = useRef();
 
     // ✅ On page load: check user session and fetch student data
     useEffect(() => {
@@ -228,11 +231,256 @@ const FacultyEvaluation = () => {
                 message: `User #${profData.prof_id} - ${fullName} printed ${page_name}`, type: type,
             });
 
-            alert("Audit log inserted successfully!");
+          
         } catch (err) {
             console.error("Error inserting audit log:", err);
             alert("Failed to insert audit log.");
         }
+    };
+
+    // Create a combined print function that logs and prints
+       // Create a combined print function that logs and prints
+    const printDiv = async () => {
+        // First log the action
+        await AuditLog();
+        
+        // ✅ Determine dynamic campus address
+        let campusAddress = "";
+        if (settings?.campus_address && settings.campus_address.trim() !== "") {
+            campusAddress = settings.campus_address;
+        } else if (settings?.address && settings.address.trim() !== "") {
+            campusAddress = settings.address;
+        } else {
+            campusAddress = "No address set in Settings";
+        }
+
+        // ✅ Dynamic logo and company name
+        const logoSrc = fetchedLogo || EaristLogo;
+        const name = companyName?.trim() || "";
+
+        // ✅ Split company name into two balanced lines
+        const words = name.split(" ");
+        const middleIndex = Math.ceil(words.length / 2);
+        const firstLine = words.slice(0, middleIndex).join(" ");
+        const secondLine = words.slice(middleIndex).join(" ");
+        
+        // Get current school year and semester for header
+        const currentSchoolYear = schoolYears.find(sy => sy.year_id === selectedSchoolYear);
+        const currentSemester = schoolSemester.find(sem => sem.semester_id === selectedSchoolSemester);
+        
+        // Calculate total responses for each course
+        const calculateTotal = (chartData) => {
+            return chartData.reduce((sum, item) => sum + item.total, 0);
+        };
+        
+        // Open new print window
+        const newWin = window.open("", "Print-Window");
+        newWin.document.open();
+        newWin.document.write(`
+            <html>
+                <head>
+                    <title>Faculty Evaluation Report</title>
+                    <style>
+                        @page { size: A4; margin: 10mm; }
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin-top: 50px;
+                            padding: 0;
+                        }
+                        .print-container {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            text-align: center;
+                        }
+                        .print-header {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            position: relative;
+                            width: 100%;
+                            margin-bottom: 2px;
+                        }
+                        .print-header img {
+                            position: absolute;
+                            left: 0;
+                            margin-left: 50px;
+                            width: 120px;
+                            height: 120px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                        }
+                        .evaluation-header {
+                            margin-top: 20px;
+                            margin-bottom: 20px;
+                        }
+                        .evaluation-title {
+                            font-size: 20px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                        }
+                        .evaluation-subtitle {
+                            font-size: 16px;
+                            margin-bottom: 5px;
+                        }
+                        .chart-container {
+                            margin-top: 0rem;
+                            width: 100%;
+                            display: flex;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            gap: 20px;
+                            transform: scale(1);
+                            margin-bottom: 10px;
+                        }
+                        .chart-card {
+                            width: 45%;
+                            border: 2px solid black;
+                            padding: 10px;
+                            margin-bottom: 20px;    
+                            page-break-inside: avoid;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                        }
+                        .chart-title {
+                            text-align: center;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            color: maroon;
+                            padding-top: 8px;
+                        }
+                        .chart-wrapper {
+                            height: 300px;
+                            position: relative;
+                        }
+                        .total-label {
+                            position: absolute;
+                            bottom: 10px;
+                            right: 10px;
+                            font-size: 12px;
+                            font-weight: bold;
+                            background: rgba(255,255,255,0.9);
+                            padding: 2px 5px;
+                            border-radius: 3px;
+                        }
+                        .no-data {
+                            text-align: center;
+                            padding: 20px;
+                            border: 2px solid black;
+                            width: 95%;
+                            margin: 0 auto;
+                        }
+                    </style>
+                </head>
+                <body onload="window.print(); setTimeout(() => window.close(), 100);">
+                    <div class="print-container">
+                        <!-- ✅ HEADER -->
+                        <div class="print-header">
+                            <img src="${logoSrc}" alt="School Logo" />
+                            <div>
+                                <div>Republic of the Philippines</div>
+                                ${name
+                ? `
+                                    <b style="letter-spacing: 1px; font-size: 20px; font-family: 'Times New Roman', serif;">
+                                        ${firstLine}
+                                    </b>
+                                    ${secondLine
+                    ? `<div style="letter-spacing: 1px; font-size: 20px; font-family: 'Times New Roman', serif;"><b>${secondLine}</b></div>`
+                    : ""
+                }
+                                `
+                : ""
+            }
+                                <div style="font-size: 12px;">${campusAddress}</div>
+                                <div style="margin-top: 10px;">
+                                    <b style="font-size: 20px; letter-spacing: 1px;">FACULTY EVALUATION REPORT</b>
+                                </div>
+                                <div class="evaluation-header">
+                                    <div class="evaluation-subtitle">Faculty: ${profData.lname}, ${profData.fname} ${profData.mname}</div>
+                                    <div class="evaluation-subtitle">
+                                        ${currentSchoolYear ? `${currentSchoolYear.current_year} - ${currentSchoolYear.next_year}` : 'School Year Not Selected'}
+                                        ${currentSemester ? `, ${currentSemester.semester_description}` : ', Semester Not Selected'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ✅ CHARTS -->
+                        <div class="chart-container">
+                            ${chartData.length > 0 ? (
+                    chartData.map((entry, index) => {
+                        const total = calculateTotal(entry.chartData);
+                        return `
+                                <div class="chart-card">
+                                    <div class="chart-title">EVALUATION FOR COURSE ${entry.course_code}</div>
+                                    <div class="chart-wrapper">
+                                        <svg width="100%" height="100%" viewBox="0 0 550 300" preserveAspectRatio="xMidYMid meet">
+                                            <!-- Grid lines (CartesianGrid) -->
+                                            <g stroke="#e0e0e0" stroke-dasharray="3 3">
+                                                ${[10, 20, 30, 40, 50].map(y => 
+                                                    `<line x1="60" y1="${200 - (y * 3.33)}" x2="500" y2="${200 - (y * 3.33)}" />`
+                                                ).join('')}
+                                            </g>
+                                            
+                                            <!-- Axes -->
+                                            <line x1="60" y1="20" x2="60" y2="200" stroke="black" />
+                                            <line x1="60" y1="200" x2="500" y2="200" stroke="black" />
+                                            
+                                            <!-- Y-axis labels -->
+                                            <g font-size="11" text-anchor="end" fill="#666">
+                                                <text x="50" y="205">0</text>
+                                                <text x="50" y="172">10</text>
+                                                <text x="50" y="138">20</text>
+                                                <text x="50" y="105">30</text>
+                                                <text x="50" y="72">40</text>
+                                                <text x="50" y="38">50</text>
+                                                <text x="50" y="5">60</text>
+                                            </g>
+                                            
+                                            <!-- Y-axis title -->
+                                            <text x="15" y="110" font-size="12" text-anchor="middle" transform="rotate(-90 15 110)">Number of Responses</text>
+                                            
+                                            <!-- Bars with exact colors from FacultyEvaluation -->
+                                            ${entry.chartData.map((item, i) => {
+                                                const barHeight = (item.total / 60) * 180; // Scale based on max value of 60
+                                                const x = 60 + (i * 88);
+                                                const colors = ["#FF0000", "#00C853", "#2196F3", "#FFD600", "#FF6D00"];
+                                                return `
+                                                    <rect x="${x}" y="${200 - barHeight}" width="70" height="${barHeight}" 
+                                                          fill="${colors[i]}" rx="2" />
+                                                    <text x="${x + 35}" y="220" text-anchor="middle" font-size="11">${item.name}</text>
+                                                    <text x="${x + 35}" y="${195 - barHeight}" text-anchor="middle" font-size="10" font-weight="bold">${item.total}</text>
+                                                `;
+                                            }).join('')}
+                                            
+                                            <!-- Tooltip style hover areas (optional, for visual reference) -->
+                                            ${entry.chartData.map((item, i) => {
+                                                const x = 60 + (i * 88);
+                                                return `
+                                                    <rect x="${x}" y="20" width="70" height="180" 
+                                                          fill="transparent" style="cursor: pointer;">
+                                                        <title>${item.name}: ${item.total} responses</title>
+                                                    </rect>
+                                                `;
+                                            }).join('')}
+                                        </svg>
+                                       
+                                    </div>
+                                </div>
+                            `;
+                    }).join('')
+                ) : `
+                                <div class="no-data">
+                                    There's no evaluation in this term.
+                                </div>
+                            `
+            }
+                        </div>
+                    </div>
+                </body>
+            </html>
+        `);
+        newWin.document.close();
     };
 
     // 🔒 Disable right-click
@@ -253,7 +501,7 @@ const FacultyEvaluation = () => {
     });
 
     return (
-        <Box sx={{ height: 'calc(100vh - 150px)', overflowY: 'auto', pr: 1 }}>
+        <Box className="body" sx={{ height: 'calc(100vh - 150px)', overflowY: 'auto', pr: 1 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                 <Typography variant="h4" fontWeight="bold" style={{ color: titleColor }}>
                     FACULTY EVALUATION
@@ -290,7 +538,7 @@ const FacultyEvaluation = () => {
                         </Typography>
 
                         <button
-                            onClick={AuditLog}
+                            onClick={printDiv}
                             style={{
                                 width: "300px",
                                 padding: "10px 20px",
@@ -378,88 +626,118 @@ const FacultyEvaluation = () => {
                     </Box>
                 </Box>
             </TableContainer>
-            <Grid container spacing={3} sx={{ mt: 3, gap: "2rem", justifyContent: "center", display: "flex", flexWrap: "wrap", }}>
-                {chartData.length > 0 ? (
-                    chartData.map((entry, index) => (
-                        <Grid item xs={12} md={12} lg={5} key={index}>
-                            <Card
-                                sx={{
-                                    p: 2,
-                                    marginLeft: "10px",
-                                    marginTop: "-20px",
-                                    borderRadius: 3,
-                                    width: 550,
-                                    height: 400,
-                                    border: `2px solid ${borderColor}`,
-                                    transition: "transform 0.2s ease",
-                                    boxShadow: 3,
-                                    "&:hover": { transform: "scale(1.03)" },
-                                    boxShadow: 3,
-                                }}
-                            >
-                                <CardContent sx={{ height: "100%", p: 0 }}>
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="bold"
-                                        mb={1}
-                                        sx={{ color: "maroon", textAlign: "center", pl: 2, pt: 2 }}
-                                    >
-                                        EVALUATION FOR COURSE {entry.course_code}
-                                    </Typography>
-                                    {/* Chart takes the rest of card height */}
-                                    <Box sx={{ height: "calc(100% - 40px)", px: 2, pb: 2 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart
-                                                data={entry.chartData}
-                                                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" />
-                                                <XAxis
-                                                    dataKey="name"
-                                                    interval={0}
-                                                />
-                                                <YAxis
-                                                    allowDecimals={false}
-                                                    ticks={[0, 10, 20, 30, 40, 50, 60]}
-                                                    domain={[0, 60]}
-                                                    label={{
-                                                        value: 'Number of Responses',
-                                                        angle: -90,
-                                                        position: 'insideLeft',
-                                                        dy: 90,
-                                                        dx: 10
-                                                    }}
-                                                />
-                                                <Tooltip />
-                                                <Bar dataKey="total">
-                                                    {entry.chartData.map((_, i) => (
-                                                        <Cell
-                                                            key={`cell-${i}`}
-                                                            fill={[
-                                                                "#FF0000",
-                                                                "#00C853",
-                                                                "#2196F3",
-                                                                "#FFD600",
-                                                                "#FF6D00",
-                                                            ][i % 5]}
-                                                        />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))) : (
-                    <Typography variant="body1" color="text.secondary" sx={{ mt: 1, ml: 1, width: '97%', border: `2px solid ${borderColor}`, p: 10, textAlign: "center" }}>
-                        There's no evaluation in this term.
-                    </Typography>
-                )}
-            </Grid>
+            
+            <div className='print-container' ref={divToPrintRef}>
+                <Grid container spacing={3} sx={{ mt: 3, gap: "2rem", justifyContent: "center", display: "flex", flexWrap: "wrap", }}>
+                    {chartData.length > 0 ? (
+                        chartData.map((entry, index) => (
+                            <Grid item xs={12} md={12} lg={5} key={index}>
+                                <Card
+                                    sx={{
+                                        p: 2,
+                                        marginLeft: "10px",
+                                        marginTop: "-20px",
+                                        borderRadius: 3,
+                                        width: 550,
+                                        height: 400,
+                                        border: `2px solid ${borderColor}`,
+                                        transition: "transform 0.2s ease",
+                                        boxShadow: 3,
+                                        "&:hover": { transform: "scale(1.03)" },
+                                        boxShadow: 3,
+                                    }}
+                                >
+                                    <CardContent sx={{ height: "100%", p: 0 }}>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            mb={1}
+                                            sx={{ color: "maroon", textAlign: "center", pl: 2, pt: 2 }}
+                                        >
+                                            EVALUATION FOR COURSE {entry.course_code}
+                                        </Typography>
+                                        {/* Chart takes the rest of card height */}
+                                        <Box sx={{ height: "calc(100% - 40px)", px: 2, pb: 2 }}>
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart
+                                                    data={entry.chartData}
+                                                    margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                                                >
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis
+                                                        dataKey="name"
+                                                        interval={0}
+                                                    />
+                                                    <YAxis
+                                                        allowDecimals={false}
+                                                        ticks={[0, 10, 20, 30, 40, 50, 60]}
+                                                        domain={[0, 60]}
+                                                        label={{
+                                                            value: 'Number of Responses',
+                                                            angle: -90,
+                                                            position: 'insideLeft',
+                                                            dy: 90,
+                                                            dx: 10
+                                                        }}
+                                                    />
+                                                    <Tooltip />
+                                                    <Bar dataKey="total">
+                                                        {entry.chartData.map((_, i) => (
+                                                            <Cell
+                                                                key={`cell-${i}`}
+                                                                fill={[
+                                                                    "#FF0000",
+                                                                    "#00C853",
+                                                                    "#2196F3",
+                                                                    "#FFD600",
+                                                                    "#FF6D00",
+                                                                ][i % 5]}
+                                                            />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </Box>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))) : (
+                        <Typography variant="body1" color="text.secondary" sx={{ mt: 1, ml: 1, width: '97%', border: `2px solid ${borderColor}`, p: 10, textAlign: "center" }}>
+                            There's no evaluation in this term.
+                        </Typography>
+                    )}
+                </Grid>
+            </div>
+
+            <style>
+                {`
+                @media print {
+                    @page {
+                        margin: 0; 
+                    }
+                
+                    body * {
+                        visibility: hidden;
+                    }
+
+                    .print-container, .print-container * {
+                        visibility: visible;
+                    }
+                    .print-container {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                    }
+                    button {
+                        display: none !important; /* hide buttons */
+                    }
+                }
+                `}
+            </style>
         </Box>
 
     )
 }
 
-export default FacultyEvaluation    
+export default FacultyEvaluation;

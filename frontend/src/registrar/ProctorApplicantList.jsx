@@ -77,20 +77,20 @@ const ProctorApplicantList = () => {
   const secondLine = words.slice(middle).join(" ");
 
 
-
+  const location = useLocation();
 
   const tabs = [
     { label: "Admission Process for Registrar", to: "/applicant_list_admin", icon: <SchoolIcon fontSize="large" /> },
-     { label: "Applicant Form", to: "/admin_dashboard1", icon: <DashboardIcon fontSize="large" /> },
-     { label: "Student Requirements", to: "/student_requirements", icon: <AssignmentIcon fontSize="large" /> },
-     { label: "Room Registration", to: "/room_registration", icon: <KeyIcon fontSize="large" /> },
-     { label: "Entrance Exam Room Assignment", to: "/assign_entrance_exam", icon: <MeetingRoomIcon fontSize="large" /> },
-     { label: "Entrance Exam Schedule Management", to: "/assign_schedule_applicant", icon: <ScheduleIcon fontSize="large" /> },
-     { label: "Examination Profile", to: "/registrar_examination_profile", icon: <PersonSearchIcon fontSize="large" /> },
-     { label: "Proctor's Applicant List", to: "/proctor_applicant_list", icon: <PeopleIcon fontSize="large" /> },
-     { label: "Entrance Examination Scores", to: "/applicant_scoring", icon: <FactCheckIcon fontSize="large" /> },
- 
- 
+    { label: "Applicant Form", to: "/admin_dashboard1", icon: <DashboardIcon fontSize="large" /> },
+    { label: "Student Requirements", to: "/student_requirements", icon: <AssignmentIcon fontSize="large" /> },
+    { label: "Room Registration", to: "/room_registration", icon: <KeyIcon fontSize="large" /> },
+    { label: "Entrance Exam Room Assignment", to: "/assign_entrance_exam", icon: <MeetingRoomIcon fontSize="large" /> },
+    { label: "Entrance Exam Schedule Management", to: "/assign_schedule_applicant", icon: <ScheduleIcon fontSize="large" /> },
+    { label: "Examination Profile", to: "/registrar_examination_profile", icon: <PersonSearchIcon fontSize="large" /> },
+    { label: "Proctor's Applicant List", to: "/proctor_applicant_list", icon: <PeopleIcon fontSize="large" /> },
+    { label: "Entrance Examination Scores", to: "/applicant_scoring", icon: <FactCheckIcon fontSize="large" /> },
+
+
 
   ];
 
@@ -176,6 +176,22 @@ const ProctorApplicantList = () => {
 
   });
 
+  const handleSearchByProctor = async (proctorName, scheduleID) => {
+    try {
+      const { data } = await axios.get(
+        "http://localhost:5000/api/proctor-applicants",
+        {
+          params: { query: proctorName, schedule_id: scheduleID }
+        }
+      );
+
+      setProctor(data[0]?.schedule || null);
+      setApplicants(data[0]?.applicants || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSearch = async () => {
     try {
       const { data } = await axios.get(
@@ -188,6 +204,17 @@ const ProctorApplicantList = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const proctorParam = params.get("proctor");
+    const scheduleParam = params.get("schedule");
+
+    if (proctorParam) {
+      setSearchQuery(proctorParam);
+      handleSearchByProctor(proctorParam, scheduleParam);
+    }
+  }, [location.search]);
 
   const [curriculumOptions, setCurriculumOptions] = useState([]);
 
@@ -209,171 +236,104 @@ const ProctorApplicantList = () => {
     const newWin = window.open("", "Print-Window");
     newWin.document.open();
 
-    // ✅ Dynamic logo and company name from Settings
     const logoSrc = fetchedLogo || EaristLogo;
     const name = companyName?.trim() || "No Company Name Available";
 
-    // ✅ Split company name for layout
     const words = name.split(" ");
     const middleIndex = Math.ceil(words.length / 2);
     const firstLine = words.slice(0, middleIndex).join(" ");
     const secondLine = words.slice(middleIndex).join(" ");
 
-    // ✅ Dynamic address from Settings (dropdown or custom)
-    let address = "";
-    if (settings?.campus_address) {
-      address = settings.campus_address;
-    } else if (settings?.address) {
-      address = settings.address;
-    } else {
-      address = "No address set in Settings";
-    }
+    const address = settings?.campus_address || settings?.address || "No address set in Settings";
+    const today = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const borderColor = "black"; // table border color
+    const headerColor = settings?.header_color || "#1976d2"; // dynamic header color
 
     const htmlContent = `
-  <html>
-    <head>
-      <title>Proctor Applicant List</title>
-      <style>
-        @page { size: A4; margin: 10mm; }
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-        .print-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-        }
-        .print-header {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          width: 100%;
-        }
-        .print-header img {
-          position: absolute;
-          left: 0;
-          margin-left: 10px;
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          object-fit: cover;
-          
-        }
-        table {
-          border-collapse: collapse;
-          width: 100%;
-          margin-top: 20px;
-        }
-        th, td {
-          border: 2px solid maroon;
-          padding: 6px;
-          font-size: 12px;
-          text-align: left;
-        }
-        th {
-          text-align: center;
-          background-color: #800000;
-          color: white;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-      </style>
-    </head>
-    <body onload="window.print(); setTimeout(() => window.close(), 100);">
-      <div class="print-container">
-        <!-- ✅ HEADER -->
-        <div class="print-header">
-          <img src="${logoSrc}" alt="School Logo" />
-          <div>
-            <div>Republic of the Philippines</div>
-
-            <!-- ✅ Dynamic company name -->
-            <b style="letter-spacing: 1px; font-size: 22px; font-family: 'Times New Roman', serif;">
-              ${firstLine}
-            </b>
-            ${secondLine
-        ? `<div style="letter-spacing: 1px; font-size: 22px; font-family: 'Times New Roman', serif;">
-                     <b>${secondLine}</b>
-                   </div>`
-        : ""
-      }
-
-            <!-- ✅ Dynamic address from Settings -->
-            <div style="font-size: 12px;">${address}</div>
-
-            <div style="margin-top: 25px;">
-              <b style="font-size: 22px; letter-spacing: 1px;">Proctor Applicant List</b>
-            </div>
-          </div>
+<html>
+  <head>
+    <title>Proctor Applicant List</title>
+    <style>
+      @page { size: A4 landscape; margin: 5mm; }
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .print-container { display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .print-header img { position: absolute; left: 0; margin-left: 10px; width: 90px; height: 90px; border-radius: 50%; object-fit: cover; }
+      .print-header div { font-size: 12px; }
+      b.header-title { font-size: 18px !important; }
+      table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+      th, td { border: 1px solid ${borderColor}; padding: 3px 4px; font-size: 10px; line-height: 1.1; }
+      th { text-align: center; background-color: ${headerColor}; color: white; }
+      th:nth-child(1) { width: 3%; }
+      th:nth-child(2) { width: 10%; }
+      th:nth-child(3) { width: 25%; }
+      th:nth-child(4) { width: 25%; }
+      th:nth-child(5) { width: 10%; }
+    </style>
+  </head>
+  <body onload="window.print(); setTimeout(() => window.close(), 100);">
+    <div class="print-container">
+      <div class="print-header">
+        <img src="${logoSrc}" alt="School Logo" />
+        <div>
+          <div>Republic of the Philippines</div>
+          <b style="letter-spacing:1px; font-size:22px; font-family:'Times New Roman', serif;">${firstLine}</b>
+          ${secondLine ? `<div style="letter-spacing:1px; font-size:22px; font-family:'Times New Roman', serif;"><b>${secondLine}</b></div>` : ""}
+          <div style="font-size:12px;">${address}</div>
+          <div style="margin-top:25px;"><b style="font-size:22px; letter-spacing:1px;">Proctor Applicant List</b></div>
         </div>
-
-        <!-- ✅ PROCTOR INFO -->
-        <div style="margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; justify-content: space-between; width: 100%;">
-            <span><b>Proctor:</b> ${proctor?.proctor || "N/A"}</span>
-            <span><b>Building:</b> ${proctor?.building_description || "N/A"}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; width: 100%;">
-            <span><b>Room:</b> ${proctor?.room_description || "N/A"}</span>
-            <span><b>Schedule:</b>
-              ${proctor?.day_description || ""} |
-              ${proctor?.start_time
-        ? new Date("1970-01-01T" + proctor.start_time).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-        : ""
-      } -
-              ${proctor?.end_time
-        ? new Date("1970-01-01T" + proctor.end_time).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-        : ""
-      }
-            </span>
-          </div>
-        </div>
-
-        <!-- ✅ APPLICANT TABLE -->
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Applicant #</th>
-              <th>Applicant Name</th>
-              <th>Program</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${applicants
-        .map((a, index) => {
-          const program =
-            curriculumOptions.find(
-              (item) => item.curriculum_id?.toString() === a.program?.toString()
-            )?.program_code ?? "N/A";
-          return `
-                  <tr>
-                    <td>${index + 1}</td>
-                    <td>${a.applicant_number}</td>
-                    <td>${a.last_name}, ${a.first_name} ${a.middle_name || ""}</td>
-                    <td>${program}</td>
-                  </tr>`;
-        })
-        .join("")}
-            <tr>
-              <td colspan="4" style="text-align:right; font-weight:bold;">
-                Total Applicants: ${applicants.length}
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
-    </body>
-  </html>
+
+      <div style="margin-top:20px; width:100%; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span><b>Proctor:</b> ${proctor?.proctor || "N/A"}</span>
+          <span><b>Building:</b> ${proctor?.building_description || "N/A"}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span><b>Room:</b> ${proctor?.room_description || "N/A"}</span>
+          <span><b>Schedule:</b>
+            ${formatDateLong(proctor?.day_description) || ""} |
+            ${proctor?.start_time ? new Date("1970-01-01T" + proctor.start_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : ""} -
+            ${proctor?.end_time ? new Date("1970-01-01T" + proctor.end_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : ""}
+          </span>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Applicant #</th>
+            <th>Applicant Name</th>
+            <th>Program</th>
+            <th>Signature</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${applicants.map((a, index) => {
+      const programItem = curriculumOptions.find(item => item.curriculum_id?.toString() === a.program?.toString());
+      const program = programItem ? `(${programItem.program_code}) - ${programItem.program_description} ${programItem.major || ""}` : "N/A";
+      return `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${a.applicant_number}</td>
+              <td>${a.last_name}, ${a.first_name} ${a.middle_name || ""}</td>
+              <td>${program}</td>
+              <td></td>
+            </tr>`;
+    }).join("")}
+          <tr>
+            <td colspan="5" style="text-align:right; font-weight:bold;">Total Applicants: ${applicants.length}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
 `;
 
     newWin.document.write(htmlContent);
@@ -395,24 +355,18 @@ const ProctorApplicantList = () => {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
 
-  // 🔒 Disable right-click
-  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  const formatDateLong = (dateString) => {
+    if (!dateString) return "";
 
-  // 🔒 Block DevTools shortcuts + Ctrl+P silently
-  document.addEventListener('keydown', (e) => {
-    const isBlockedKey =
-      e.key === 'F12' || // DevTools
-      e.key === 'F11' || // Fullscreen
-      (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'j')) || // Ctrl+Shift+I/J
-      (e.ctrlKey && e.key.toLowerCase() === 'u') || // Ctrl+U (View Source)
-      (e.ctrlKey && e.key.toLowerCase() === 'p');   // Ctrl+P (Print)
+    const date = new Date(dateString);
+    if (isNaN(date)) return dateString; // fallback if invalid date
 
-    if (isBlockedKey) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  });
-
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
 
 
@@ -540,10 +494,11 @@ const ProctorApplicantList = () => {
             fontSize: "16px",
           }}
         >
-          <span><b>Proctor:</b> {proctor.proctor || "N/A"}</span>
-          <span><b>Building:</b> {proctor.building_description || "N/A"}</span>
-          <span><b>Room:</b> {proctor.room_description || "N/A"}</span>
-          <span><b>Schedule:</b> {proctor.day_description || ""} |{" "}</span>
+          <span><b>Proctor:</b> {proctor.proctor || "N/A"} |{" "}</span>
+          <span><b>Building:</b> {proctor.building_description || "N/A"} |{" "}</span>
+          <span><b>Room:</b> {proctor.room_description || "N/A"} |{" "}</span>
+          <span><b>Schedule:</b> {formatDateLong(proctor?.day_description)} |{" "}</span>
+
           <span><b>Time: </b>
             {proctor.start_time
               ? new Date(`1970-01-01T${proctor.start_time}`).toLocaleTimeString("en-US", {
@@ -610,7 +565,7 @@ const ProctorApplicantList = () => {
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Program</TableCell>
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Building</TableCell>
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Room</TableCell>
-                <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Email Sent</TableCell>
+
               </TableRow>
             </TableHead>
 
@@ -623,19 +578,24 @@ const ProctorApplicantList = () => {
                     {`${a.last_name}, ${a.first_name} ${a.middle_name || ""}`}
                   </TableCell>
                   <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {curriculumOptions.find(
-                      (item) => item.curriculum_id?.toString() === a.program?.toString()
-                    )?.program_code ?? "N/A"}
+                    {(() => {
+                      const item = curriculumOptions.find(
+                        (x) => x.curriculum_id?.toString() === a.program?.toString()
+                      );
+
+                      return item
+                        ? `(${item.program_code}) - ${item.program_description} ${item.major || ""}`
+                        : "N/A";
+                    })()}
                   </TableCell>
+
                   <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
                     {a.building_description || proctor?.building_description || "N/A"} {/* ✅ NEW */}
                   </TableCell>
                   <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
                     {a.room_description || proctor?.room_description || "N/A"} {/* ✅ NEW */}
                   </TableCell>
-                  <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {a.email_sent ? "✅ Sent" : "❌ Not Sent"}
-                  </TableCell>
+
                 </TableRow>
               ))}
             </TableBody>

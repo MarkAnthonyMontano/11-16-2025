@@ -286,7 +286,7 @@ function Settings({ onUpdate }) {
                 {/* Right side: Colors + Save Button */}
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
                     <Typography variant="h6" fontWeight="bold" sx={{ color: subtitleColor }}>
-                        Colors
+                        Theme Colors
                     </Typography>
                     {[
                         { label: "Header Color", value: headerColor, setter: setHeaderColor },

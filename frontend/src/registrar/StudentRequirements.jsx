@@ -1408,6 +1408,7 @@ const StudentRequirements = () => {
 
                   {/* 🟢 Submit Button */}
                   <Button
+                  disabled
                     variant="contained"
                     color="success"
                     sx={{
@@ -1417,7 +1418,7 @@ const StudentRequirements = () => {
                       width: 250
                     }}
                     onClick={() => handleConfirmUpload({ label: "New Document" })}
-                    disabled={!selectedFiles.file}
+                 
                   >
                     Submit Documents
                   </Button>

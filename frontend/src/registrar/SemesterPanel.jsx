@@ -197,6 +197,7 @@ const SemesterPanel = () => {
             <Typography variant="h6" sx={{ mb: 2, color: subtitleColor }}>
               Add Semester
             </Typography>
+             <Typography fontWeight={500}>Semester Description:</Typography>
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth

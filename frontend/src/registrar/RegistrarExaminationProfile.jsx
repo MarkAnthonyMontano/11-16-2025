@@ -11,6 +11,8 @@ import {
     TableHead,
     TableRow,
     TableCell,
+    Container,
+    TableBody,
     Card
 } from "@mui/material";
 import EaristLogo from "../assets/EaristLogo.png";
@@ -259,36 +261,31 @@ const ExaminationProfile = ({ personId }) => {
         }
     }, [selectedPerson]);
 
-    // ✅ Handle search by applicant number or name
+    // Add this state at the top level
+    const [searchResults, setSearchResults] = useState([]);
+
+
+    // Replace your existing search useEffect with this
     useEffect(() => {
-        if (!searchQuery.trim()) {
-            setSelectedPerson(null);
+        const query = searchQuery.trim().toLowerCase();
+
+
+        if (!query) {
+            setSearchResults([]);
             return;
         }
 
-        const match = persons.find((p) => {
-            const fullString = `${p.first_name ?? ""} ${p.middle_name ?? ""} ${p.last_name ?? ""} ${p.emailAddress ?? ""}`.toLowerCase();
-            const numberMatch = (p.applicant_number || "").toLowerCase() === searchQuery.toLowerCase();
-            const textMatch = fullString.includes(searchQuery.toLowerCase());
+
+        const results = persons.filter((p) => {
+            const fullString = `${p.first_name ?? ''} ${p.middle_name ?? ''} ${p.last_name ?? ''} ${p.emailAddress ?? ''}`.toLowerCase();
+            const numberMatch = (p.applicant_number || '').toLowerCase().includes(query);
+            const textMatch = fullString.includes(query);
             return numberMatch || textMatch;
         });
 
-        if (match) {
-            setSelectedPerson(match);
-            setPerson(match);
-        } else {
-            axios
-                .get(`http://localhost:5000/api/person-by-applicant/${searchQuery}`)
-                .then((res) => {
-                    if (res.data?.person_id) {
-                        setSelectedPerson(res.data);
-                        fetchPersonData(res.data.person_id);
-                    }
-                })
-                .catch(() => setSelectedPerson(null));
-        }
-    }, [searchQuery, persons]);
 
+        setSearchResults(results);
+    }, [searchQuery, persons]);
     // ✅ Fetch curriculum options
     useEffect(() => {
         const fetchCurriculums = async () => {
@@ -339,39 +336,72 @@ const ExaminationProfile = ({ personId }) => {
             .catch((err) => console.error("Error fetching registrar name:", err));
     }, []);
 
-    const printDiv = () => {
-        const divToPrint = divToPrintRef.current;
-        if (!divToPrint) return;
-        const newWin = window.open("", "Print-Window");
-        newWin.document.open();
-        newWin.document.write(`
-      <html>
-        <head><title>Print</title></head>
-        <body onload="window.print(); setTimeout(() => window.close(), 100);">
-          ${divToPrint.innerHTML}
-        </body>
-      </html>
-    `);
-        newWin.document.close();
+    const permitRef = useRef();
+    const changeCourseRef = useRef();
+
+    const printDiv = (ref) => {
+        const divToPrint = ref.current;
+        if (divToPrint) {
+            const newWin = window.open('', 'Print-Window');
+            newWin.document.open();
+            newWin.document.write(`
+            <html>
+                <head>
+                    <title>Print</title>
+                    <style>
+                        @page {
+                            size: Legal;
+                            margin: 0;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-family: Arial, sans-serif;
+                        }
+
+                        /* 🔥 THIS IS YOUR MISSING STYLE */
+                        .student-table {
+                            margin-top: 15px !important;
+                        }
+
+                        button {
+                            display: none;
+                        }
+                    </style>
+                </head>
+                
+                <body onload="window.print(); setTimeout(() => window.close(), 200);">
+                    <div class="print-container">
+                        ${divToPrint.innerHTML}
+                    </div>
+                </body>
+            </html>
+        `);
+            newWin.document.close();
+        } else {
+            console.error("❌ Print ref is not set.");
+        }
     };
 
     const [showPrintView, setShowPrintView] = useState(false);
 
-    const handlePrintClick = async () => {
-        if (!selectedPerson?.person_id) {
-            alert("Please select a person first.");
-            return;
-        }
-
-        // Fetch fresh person data before printing
+    const handlePrintPermit = async () => {
         await fetchPersonData(selectedPerson.person_id);
-
-        // Show print layout (hidden in normal view)
         setShowPrintView(true);
 
-        // Wait a moment to ensure rendering is complete
         setTimeout(() => {
-            printDiv();
+            printDiv(permitRef);
+            setShowPrintView(false);
+        }, 200);
+    };
+
+
+    const handlePrintChangeCourse = async () => {
+        await fetchPersonData(selectedPerson.person_id);
+        setShowPrintView(true);
+
+        setTimeout(() => {
+            printDiv(changeCourseRef);
             setShowPrintView(false);
         }, 200);
     };
@@ -437,6 +467,79 @@ const ExaminationProfile = ({ personId }) => {
                             startAdornment: <SearchIcon sx={{ mr: 1, color: "gray" }} />,
                         }}
                     />
+
+                    {
+                        searchResults.length > 0 && (
+                            <TableContainer component={Paper} sx={{ mt: 2 }}>
+                                <Table>
+
+                                    {/* 🔹 HEADER ONLY GETS COLOR */}
+                                    <TableHead
+                                        sx={{
+                                            backgroundColor: settings?.header_color || "#1976d2",
+                                            border: `2px solid ${borderColor}`,
+                                        }}
+                                    >
+                                        <TableRow>
+                                            <TableCell sx={{ color: "white", fontWeight: "bold" }}>Applicant No.</TableCell>
+                                            <TableCell sx={{ color: "white", fontWeight: "bold" }}>Name</TableCell>
+                                            <TableCell sx={{ color: "white", fontWeight: "bold" }}>Email</TableCell>
+                                            <TableCell
+                                                align="center"
+                                                sx={{ color: "white", fontWeight: "bold" }}
+                                            >
+                                                Select
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableHead>
+
+                                    {/* 🔹 BODY — WHITE BACKGROUND + BLACK BORDERS */}
+                                    <TableBody>
+                                        {searchResults.map((row, idx) => (
+                                            <TableRow
+                                                key={idx}
+                                                sx={{
+                                                    backgroundColor: "#ffffff",
+                                                    "& td": {
+                                                        border: "1px solid black",
+                                                        color: "black",
+                                                    },
+                                                }}
+                                            >
+                                                <TableCell>{row.applicant_number}</TableCell>
+                                                <TableCell>{`${row.last_name}, ${row.first_name} ${row.middle_name}`}</TableCell>
+                                                <TableCell>{row.emailAddress}</TableCell>
+
+                                                {/* 🔹 CENTER THE SELECT BUTTON */}
+                                                <TableCell align="center">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedPerson(row);
+                                                            fetchPersonData(row.person_id);
+                                                            setSearchResults([]);
+                                                        }}
+                                                        style={{
+                                                            padding: "6px 12px",
+                                                            backgroundColor: "#1976d2",
+                                                            color: "white",
+                                                            border: "none",
+                                                            borderRadius: "6px",
+                                                            cursor: "pointer",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    >
+                                                        Select
+                                                    </button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+
+                                </Table>
+                            </TableContainer>
+
+                        )
+                    }
                 </Box>
 
                 <hr style={{ border: "1px solid #ccc", width: "100%" }} />
@@ -521,7 +624,7 @@ const ExaminationProfile = ({ personId }) => {
 
 
                 <button
-                    onClick={handlePrintClick}
+                    onClick={handlePrintPermit}
                     style={{
                         marginBottom: "1rem",
                         padding: "10px 20px",
@@ -531,6 +634,7 @@ const ExaminationProfile = ({ personId }) => {
                         borderRadius: "5px",
                         marginTop: "20px",
                         cursor: "pointer",
+                        marginRight: "30px",
                         fontSize: "16px",
                         fontWeight: "bold",
                         transition: "background-color 0.3s, transform 0.2s",
@@ -546,18 +650,45 @@ const ExaminationProfile = ({ personId }) => {
                     </span>
                 </button>
 
+                <button
+                    onClick={handlePrintChangeCourse}
+                    style={{
+                        marginBottom: "1rem",
+                        padding: "10px 20px",
+                        border: "2px solid black",
+                        backgroundColor: "#f0f0f0",
+                        color: "black",
+                        borderRadius: "5px",
+                        marginTop: "20px",
+                        cursor: "pointer",
+
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                        transition: "background-color 0.3s, transform 0.2s",
+                    }}
+                    onMouseEnter={(e) => (e.target.style.backgroundColor = "#d3d3d3")}
+                    onMouseLeave={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
+                    onMouseDown={(e) => (e.target.style.transform = "scale(0.95)")}
+                    onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+                >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FcPrint size={20} />
+                        Print Applicant Change Course Form
+                    </span>
+                </button>
+
                 {selectedPerson && (
-                    <div ref={divToPrintRef} style={{ position: "relative" }}>
+                    <div ref={permitRef} style={{ position: "relative" }}>
                         {/* ✅ VERIFIED Watermark */}
                         <div
                             style={{
                                 position: "absolute",
-                                top: "30%",
+                                top: "40%",
                                 left: "50%",
                                 transform: "translate(-50%, -50%) rotate(-30deg)",
-                                fontSize: "6.30rem",
+                                fontSize: isVerified ? "6.3rem" : "6rem", // slightly smaller for stacked text
                                 fontWeight: "900",
-                                color: isVerified ? "rgba(0, 128, 0, 0.15)" : "rgba(255, 0, 0, 0.15)", // green if verified, red if not
+                                color: isVerified ? "rgba(0, 128, 0, 0.15)" : "rgba(255, 0, 0, 0.18)",
                                 textTransform: "uppercase",
                                 whiteSpace: "nowrap",
                                 pointerEvents: "none",
@@ -565,9 +696,17 @@ const ExaminationProfile = ({ personId }) => {
                                 zIndex: 0,
                                 fontFamily: "'Arial Black', sans-serif",
                                 letterSpacing: "0.3rem",
+                                textAlign: "center",        // 🔥 needed for stacked NOT + VERIFIED
+                                lineHeight: isVerified ? "1" : "0.8", // tighten stacked spacing
                             }}
                         >
-                            {isVerified ? "VERIFIED" : "NOT VERIFIED"}
+                            {isVerified ? (
+                                "VERIFIED"
+                            ) : (
+                                <>
+                                    NOT<br />VERIFIED
+                                </>
+                            )}
                         </div>
 
 
@@ -581,6 +720,7 @@ const ExaminationProfile = ({ personId }) => {
                                     margin: "0 auto", // Center the table inside the form
                                     textAlign: "center",
                                     tableLayout: "fixed",
+
                                 }}
                             >
                                 <style>{`
@@ -647,7 +787,7 @@ const ExaminationProfile = ({ personId }) => {
 
                                         <td colSpan={40} style={{ height: "0.5in", textAlign: "center" }}>
                                             {/* Header */}
-                                            <table width="100%" style={{ borderCollapse: "collapse", marginTop: "-30px", fontFamily: "Arial" }}>
+                                            <table width="100%" style={{ borderCollapse: "collapse", marginTop: "30px", fontFamily: "Arial" }}>
                                                 <tbody>
                                                     <tr>
 
@@ -1133,29 +1273,54 @@ const ExaminationProfile = ({ personId }) => {
                                 }}
                             >
                                 <tbody>
+
+
                                     <tr>
                                         <td
                                             colSpan={40}
                                             style={{
-                                                textAlign: "justify",
                                                 color: "black",
-                                                padding: "8px",
-                                                lineHeight: "1.5",
-                                                textAlign: "Center",
-
+                                                padding: "12px",
+                                                lineHeight: "1.6",
+                                                textAlign: "left",
                                                 fontSize: "14px",
                                                 fontFamily: "Arial, Helvetica, sans-serif",
-
-                                                fontWeight: "200px"
                                             }}
                                         >
-                                            <strong>
-                                                <div>NOTE: Please bring this examination permit on the examination day together with</div>
-                                                <div>Two short bond paper, pencil w/ erasers & ballpen. Please come on decent attire</div>
-                                                <div>(no sleeveless or shorts) at least 1 hour before the examination</div>
-                                            </strong>
+                                            <strong>IMPORTANT REMINDERS FOR APPLICANTS:</strong>
+
+                                            <ul style={{ marginTop: "8px" }}>
+                                                <strong>Step 1:</strong> Check your Examination Date, Time, and Room Number indicated on your permit.
+                                                <br />
+
+
+                                                <strong>Step 2:</strong> Bring all required items on the exam day:
+                                                <ul>
+                                                    <li>Official Examination Permit with VERIFIED watermark on it</li>
+                                                    <li>No. 2 Pencil (any brand)</li>
+                                                    <li>2 Short bond papers</li>
+                                                </ul>
+
+
+
+                                                <strong>Step 3:</strong> Wear the proper attire:
+                                                <ul>
+                                                    <li>Plain white T-shirt or plain white polo shirt <strong>(no prints, no logos, no designs)</strong></li>
+                                                    <li>Pants (No shorts, No ripped jeans are not Allowed)</li>
+                                                    <li>Closed shoes (no crocs, sandals, slippers)</li>
+                                                </ul>
+
+
+                                                <strong>Step 4:</strong>Keep the two paper sheets attached to your exam permit. You will need them for the document check and enrollment process.
+                                                <br />
+                                                <strong>Step 5:</strong>Please Arrive at least 1 hour before your examination time. Late applicants will NOT be allowed to enter once the exam room door closes.
+                                                <br />
+                                                <br />
+                                                <div style={{ textAlign: "center", marginLeft: "-50px" }}><strong>GOODLUCK FUTURE EARISTIANS!</strong></div>
+                                            </ul>
                                         </td>
                                     </tr>
+
                                 </tbody>
                             </table>
 
@@ -1163,8 +1328,1505 @@ const ExaminationProfile = ({ personId }) => {
                     </div>
                 )}
             </div>
+            <div style={{ height: "30px" }}></div>
+            {selectedPerson && (
+                <div ref={changeCourseRef} style={{ position: "relative" }}>
+                    <Container>
+                        {/* ✅ VERIFIED Watermark */}
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "22%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%) rotate(-30deg)",
+                                fontSize: isVerified ? "6rem" : "5.7rem", // slightly smaller for stacked style
+                                fontWeight: "900",
+                                color: isVerified ? "rgba(0, 128, 0, 0.15)" : "rgba(255, 0, 0, 0.18)",
+                                textTransform: "uppercase",
+                                whiteSpace: "nowrap",
+                                textAlign: "center",     // needed for stacked "NOT / VERIFIED"
+                                pointerEvents: "none",
+                                userSelect: "none",
+                                zIndex: 0,
+                                fontFamily: "'Arial Black', sans-serif",
+                                letterSpacing: "0.3rem",
+                                lineHeight: isVerified ? "1" : "0.8",   // tighter spacing for stacked text
+                            }}
+                        >
+                            {isVerified ? (
+                                "VERIFIED"
+                            ) : (
+                                <>
+                                    NOT<br />VERIFIED
+                                </>
+                            )}
+                        </div>
+
+                        <div
+                            className="student-table"
+                            style={{
+                                width: "8in", // matches table width assuming 8in for 40 columns
+                                maxWidth: "100%",
+                                margin: "0 auto",
+                                marginTop: "-10px",
+
+                                boxSizing: "border-box",
+                                padding: "10px 0",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between", // spread logo, text, profile+QR
+                                    flexWrap: "nowrap",
+                                }}
+                            >
+                                {/* Logo (Left Side) */}
+                                <div style={{ flexShrink: 0 }}>
+                                    <img
+                                        src={fetchedLogo}
+                                        alt="School Logo"
+                                        style={{
+                                            width: "120px",
+                                            height: "120px",
+                                            objectFit: "cover",
+                                            marginLeft: "10px",
+                                            marginTop: "-25px",
+                                            borderRadius: "50%", // ✅ Makes it perfectly circular
+
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Text Block (Center) */}
+                                <div
+                                    style={{
+                                        flexGrow: 1,
+                                        textAlign: "center",
+                                        fontSize: "14px",
+                                        fontFamily: "Arial",
+                                        letterSpacing: "5",
+                                        lineHeight: 1.4,
+                                        paddingTop: 0,
+                                        paddingBottom: 0,
+                                    }}
+                                >
+                                    <div
+                                        style={{ fontFamily: "Arial", fontSize: "14px" }}
+                                    >
+                                        Republic of the Philippines
+                                    </div>
+                                    <div
+                                        style={{
+
+                                            letterSpacing: "2px",
+                                            fontFamily: "Times new roman",
+                                            fontWeight: "bold",
+                                            fontSize: "16px"
+                                        }}
+                                    >
+                                        {firstLine}
+                                    </div>
+                                    {secondLine && (
+                                        <div
+                                            style={{
+
+                                                letterSpacing: "2px",
+                                                fontWeight: "bold",
+                                                fontFamily: "Times new roman",
+                                                fontSize: "16px"
+                                            }}
+                                        >
+                                            {secondLine}
+                                        </div>
+                                    )}
+                                    {campusAddress && (
+                                        <div style={{ fontSize: "14px", fontFamily: "Arial" }}>
+                                            {campusAddress}
+                                        </div>
+                                    )}
+
+                                    <div
+                                        style={{ fontFamily: "Arial", letterSpacing: "1px" }}
+                                    >
+                                        <b>OFFICE OF THE ADMISSION SERVICES</b>
+                                    </div>
+
+                                    <br />
+
+                                    <div
+                                        style={{
+                                            fontSize: "21px",
+                                            fontFamily: "Arial",
+                                            fontWeight: "bold",
+                                            marginBottom: "5px",
+                                            marginTop: "0",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        Applicant's Change Course Form
+                                    </div>
+                                </div>
+
+                                {/* Profile + QR Code (Right Side) */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",   // ✅ side by side
+                                        alignItems: "center",
+                                        marginRight: "10px",
+                                        gap: "10px",            // ✅ 10px space between them
+                                    }}
+                                >
+                                    {/* Profile Image (2x2) */}
+                                    <div
+                                        style={{
+                                            width: "1.3in",
+                                            height: "1.3in",
+                                            border: "1px solid black",
+                                            overflow: "hidden",
+                                            flexShrink: 0,
+                                            marginTop: "-15px"
+                                        }}
+                                    >
+                                        {person?.profile_img ? (
+                                            <img
+                                                src={`http://localhost:5000/uploads/${person.profile_img}`}
+                                                alt="Profile"
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+
+                                                }}
+                                            />
+                                        ) : (
+                                            <span style={{ fontSize: "12px", color: "#888" }}>No Image</span>
+                                        )}
+                                    </div>
 
 
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <br />
+                        <br />
+                        <table
+
+                            style={{
+                                borderCollapse: "collapse",
+                                fontFamily: "Arial, Helvetica, sans-serif",
+                                width: "8in",
+                                margin: "0 auto",
+
+                                marginTop: "-30px",
+                                textAlign: "center",
+                                tableLayout: "fixed",
+                            }}
+                        >
+
+                            <tbody>
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "flex-end", // moves everything to the far right of the row
+                                                alignItems: "center",
+                                                width: "100%",
+                                            }}
+                                        >
+                                            <label
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    marginRight: "10px",
+                                                    marginTop: "-10px",
+
+                                                    fontSize: "14px"
+
+                                                }}
+                                            >
+                                                Applicant Id No.:
+                                            </label>
+
+                                            <span
+                                                style={{
+                                                    width: "200px", // fixed width for the underline
+                                                    borderBottom: "1px solid black",
+                                                    height: "1.3em",
+                                                    fontSize: "14px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <div style={{ marginTop: "-3px" }} className="dataField">
+                                                    {person.applicant_numbers}
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td
+                                        colSpan={40}
+                                        style={{
+
+                                            fontSize: "13px",
+                                            paddingTop: "5px",
+                                            marginTop: 0,
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <span
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    marginRight: "10px",
+                                                    fontSize: "14px"
+                                                }}
+                                            >
+                                                Name of Student:
+                                            </span>
+                                            <div style={{ flexGrow: 1, display: "flex", justifyContent: "space-between" }}>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.last_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.first_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.middle_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.extension}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Labels Row */}
+                                <tr>
+                                    <td
+                                        colSpan={40}
+                                        style={{
+
+                                            fontSize: "12px",
+                                            paddingTop: "2px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                marginLeft: "-30px",
+
+                                            }}
+                                        >
+                                            <span style={{ width: "20%", textAlign: "center" }}>(Pls. PRINT)</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Last Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Given Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Middle Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Ext. Name</span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Email & Applicant ID */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={20}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <label style={{ fontWeight: "bold", whiteSpace: "nowrap", marginRight: "10px", fontSize: "14px" }}>Date Applied</label>
+                                            <span style={{ flexGrow: 1, borderBottom: "1px solid black", height: "1.3em", fontSize: "14px" }}>
+                                                <div style={{ marginTop: "-3px" }} className="dataField"></div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td colSpan={20}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <label style={{ fontWeight: "bold", whiteSpace: "nowrap", marginRight: "10px", fontSize: "14px" }}>Date Examination:</label>
+                                            <span style={{ flexGrow: 1, borderBottom: "1px solid black", height: "1.3em", fontSize: "14px" }}>
+                                                <div style={{ marginTop: "-3px" }} className="dataField"></div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Email & Applicant ID */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%", marginTop: "10px" }}>
+                                            <label
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    fontSize: "14px",
+                                                    marginRight: "10px",
+                                                }}
+                                            >
+                                                ECAT Examination Result/Score:
+                                            </label>
+
+                                            {/* 25px inline block space */}
+                                            <span
+                                                style={{
+                                                    display: "inline-block",
+                                                    width: "100px",
+                                                    height: "1px",
+                                                    marginRight: "15px",
+                                                    borderBottom: "1px solid black",
+                                                }}
+                                            ></span>
+
+                                            {/* PASSED checkbox */}
+                                            <div style={{ display: "flex", alignItems: "center", marginRight: "20px" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    style={{
+                                                        width: "30px",
+                                                        height: "30px",
+                                                        marginRight: "8px",
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: "14px", fontWeight: "bold" }}>Passed</span>
+                                            </div>
+
+                                            {/* FAILED checkbox */}
+                                            <div style={{ display: "flex", alignItems: "center" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    style={{
+                                                        width: "30px",
+                                                        height: "30px",
+                                                        marginRight: "8px",
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: "14px", fontWeight: "bold" }}>Failed</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    {/* LEFT HALF */}
+                                    <td colSpan={19} style={{ padding: 0 }}>
+                                        <span
+                                            style={{
+                                                fontSize: "15px",
+                                                fontWeight: "bold",
+                                                display: "block",
+                                                marginBottom: "2px",
+                                                textAlign: "left",
+                                            }}
+                                        >
+                                            FROM DEGREE/PROGRAM APPLIED
+                                        </span>
+
+                                        <div
+                                            style={{
+                                                border: "1px solid black",
+                                                width: "100%",
+                                                height: "25px",
+                                                lineHeight: "25px",  // 🔥 makes it stay perfectly centered
+                                                fontSize: "12px",
+                                            }}
+                                        ></div>
+                                    </td>
+
+                                    {/* CENTER GAP */}
+                                    <td colSpan={2}></td>
+
+                                    {/* RIGHT HALF */}
+                                    <td colSpan={19} style={{ padding: 0 }}>
+                                        <span
+                                            style={{
+                                                fontSize: "15px",
+                                                display: "block",
+                                                textAlign: "left",
+                                                marginBottom: "2px",
+                                            }}
+                                        >
+                                            Change to <b>NEW DEGREE/PROGRAM</b>
+                                        </span>
+
+                                        <div
+                                            style={{
+                                                border: "1px solid black",
+                                                width: "100%",
+                                                height: "25px",
+                                                lineHeight: "25px",  // 🔥 same height & alignment as left
+                                                fontSize: "12px",
+                                            }}
+                                        ></div>
+                                    </td>
+                                </tr>
+
+
+
+                                {/* Reason for Change + Applicant's Signature (matches image placement) */}
+                                <tr style={{ fontSize: "13px", }}>
+                                    <td colSpan={40} style={{ padding: 0 }}>
+                                        <div
+                                            style={{
+                                                position: "relative",
+                                                width: "100%",
+                                                paddingTop: "6px",
+                                                paddingBottom: "6px",
+                                                boxSizing: "border-box",
+
+                                            }}
+                                        >
+                                            {/* Label + underline */}
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontWeight: "700",
+                                                        whiteSpace: "nowrap",
+
+                                                        marginRight: "6px",
+                                                        fontSize: "14px"
+                                                    }}
+                                                >
+                                                    Reason's for Change:
+                                                </span>
+
+                                                {/* Underline that fills until signature block */}
+                                                <div
+                                                    style={{
+                                                        flexGrow: 1,
+                                                        borderBottom: "1px solid #000",
+                                                        height: "1.15em",
+                                                        marginTop: "-4px",
+                                                        marginRight: "260px", // space for signature block
+                                                    }}
+                                                ></div>
+                                            </div>
+
+                                            {/* Signature block on the right */}
+                                            <div
+                                                style={{
+                                                    position: "absolute",
+                                                    right: "6px",
+                                                    top: "6.50px",
+                                                    width: "240px",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        width: "100%",
+                                                        borderBottom: "1px solid #000",
+                                                        height: "1.15em",
+                                                        marginBottom: "-3px",
+                                                    }}
+                                                ></div>
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        whiteSpace: "nowrap",
+                                                        textAlign: "center",
+                                                    }}
+                                                >
+                                                    Applicant's Signature
+                                                </div>
+                                            </div>
+
+                                            {/* NEW LINE — 60% width (AFTER signature) */}
+                                            <div
+                                                style={{
+                                                    marginTop: "12px",
+                                                    width: "64.5%",
+                                                    borderBottom: "1px solid #000",
+                                                    height: "1.1em",
+                                                    marginLeft: "6px", // aligns with other left content
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* College Approval from Current Program Applied */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+
+                                                fontWeight: "bold",
+                                                textAlign: "left",
+                                                fontSize: "14px"
+                                            }}
+                                        >
+                                            College Approval from current program applied:
+                                        </div>
+                                    </td>
+                                </tr>
+                                {/* College Code / Program Head / College Dean */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                width: "100%",
+                                                marginTop: "5px",
+                                            }}
+                                        >
+                                            {/* College Code */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Code</div>
+                                            </div>
+
+                                            {/* Program Head */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>Program Head</div>
+                                            </div>
+
+                                            {/* College Dean */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Dean</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+
+                                                fontWeight: "bold",
+                                                textAlign: "left",
+                                                fontSize: "14px"
+                                            }}
+                                        >
+                                            College Acceptance to new program applied:
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* College Code / Program Head / College Dean (Approval Row) */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                width: "100%",
+                                                marginTop: "5px",
+                                            }}
+                                        >
+                                            {/* College Code */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Code</div>
+                                            </div>
+
+                                            {/* Program Head */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>Program Head</div>
+                                            </div>
+
+                                            {/* College Dean */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Dean</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+
+
+                                {/* Accepted / Not Accepted / Others */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "flex-end", // aligns everything to the right
+                                                alignItems: "center",
+                                                gap: "20px",
+                                                marginTop: "10px",
+                                            }}
+                                        >
+                                            {/* Accepted */}
+                                            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                Accepted
+                                            </label>
+
+                                            {/* Not Accepted */}
+                                            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                Not Accepted
+                                            </label>
+
+                                            {/* Other/s + Line beside it */}
+                                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                    <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                    Other/s:
+                                                </label>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        width: "250px",
+                                                        height: "1px",
+                                                    }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+
+
+                            </tbody>
+
+                        </table>
+                    </Container>
+                    <div
+
+                        style={{
+                            width: "8in", // matches table width assuming 8in for 40 columns
+                            maxWidth: "100%",
+                            margin: "0 auto",
+                            boxSizing: "border-box",
+                            padding: "10px 0",
+
+                        }}
+                    >
+                        {/* Top solid line */}
+                        <hr
+                            style={{
+                                width: "100%",
+                                maxWidth: "100%",
+                                borderTop: "1px solid black",
+                                marginTop: "-5px",
+                            }}
+                        />
+
+                        {/* College Dean's Copy aligned right */}
+                        <div
+                            style={{
+                                width: "100%",
+                                textAlign: "right", // aligns to the right side
+                                fontWeight: "normal",
+                                fontSize: "14px",
+                                color: "black",
+                                marginBottom: "0",
+                                marginTop: "10px"
+                            }}
+                        >
+                            College Dean's Copy
+                        </div>
+
+                        {/* Bottom dashed line */}
+                        <hr
+                            style={{
+                                width: "100%",
+
+                                border: "none",
+                                borderTop: "1px dashed black",
+                                margin: "10px auto",
+                            }}
+                        />
+                    </div>
+
+
+                    <Container>
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "70%",   // lower half
+                                left: "50%",
+                                transform: "translate(-50%, -50%) rotate(-30deg)",
+                                fontSize: isVerified ? "6rem" : "5.7rem", // adjust slightly for stacked style
+                                fontWeight: "900",
+                                color: isVerified ? "rgba(0, 128, 0, 0.15)" : "rgba(255, 0, 0, 0.18)",
+                                textTransform: "uppercase",
+                                textAlign: "center",  // required for triangle stacking
+                                pointerEvents: "none",
+                                userSelect: "none",
+                                zIndex: 0,
+                                fontFamily: "'Arial Black', sans-serif",
+                                letterSpacing: "0.3rem",
+                                lineHeight: isVerified ? "1" : "0.8", // tighten text when stacked
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {isVerified ? (
+                                "VERIFIED"
+                            ) : (
+                                <>
+                                    NOT<br />VERIFIED
+                                </>
+                            )}
+                        </div>
+
+                        <div
+
+                            style={{
+                                width: "8in", // matches table width assuming 8in for 40 columns
+                                maxWidth: "100%",
+                                margin: "0 auto",
+                                marginTop: "-10px",
+
+                                boxSizing: "border-box",
+                                padding: "10px 0",
+                            }}
+                        >
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between", // spread logo, text, profile+QR
+                                    flexWrap: "nowrap",
+
+                                }}
+                            >
+                                {/* Logo (Left Side) */}
+                                <div style={{ flexShrink: 0 }}>
+                                    <img
+                                        src={fetchedLogo}
+                                        alt="School Logo"
+                                        style={{
+                                            width: "120px",
+                                            height: "120px",
+                                            objectFit: "cover",
+                                            marginLeft: "10px",
+                                            marginTop: "-25px",
+                                            borderRadius: "50%", // ✅ Makes it perfectly circular
+
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Text Block (Center) */}
+                                <div
+                                    style={{
+                                        flexGrow: 1,
+                                        textAlign: "center",
+                                        fontSize: "14px",
+                                        fontFamily: "Arial",
+                                        letterSpacing: "5",
+                                        lineHeight: 1.4,
+                                        paddingTop: 0,
+                                        paddingBottom: 0,
+                                    }}
+                                >
+                                    <div
+                                        style={{ fontFamily: "Arial", fontSize: "14px" }}
+                                    >
+                                        Republic of the Philippines
+                                    </div>
+                                    <div
+                                        style={{
+
+                                            letterSpacing: "2px",
+                                            fontFamily: "Times new roman",
+                                            fontWeight: "bold",
+                                            fontSize: "16px"
+                                        }}
+                                    >
+                                        {firstLine}
+                                    </div>
+                                    {secondLine && (
+                                        <div
+                                            style={{
+
+                                                letterSpacing: "2px",
+                                                fontWeight: "bold",
+                                                fontFamily: "Times new roman",
+                                                fontSize: "16px"
+                                            }}
+                                        >
+                                            {secondLine}
+                                        </div>
+                                    )}
+                                    {campusAddress && (
+                                        <div style={{ fontSize: "14px", fontFamily: "Arial" }}>
+                                            {campusAddress}
+                                        </div>
+                                    )}
+
+                                    <div
+                                        style={{ fontFamily: "Arial", letterSpacing: "1px" }}
+                                    >
+                                        <b>OFFICE OF THE ADMISSION SERVICES</b>
+                                    </div>
+
+                                    <br />
+
+                                    <div
+                                        style={{
+                                            fontSize: "21px",
+                                            fontFamily: "Arial",
+                                            fontWeight: "bold",
+                                            marginBottom: "5px",
+                                            marginTop: "0",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        Applicant's Change Course Form
+                                    </div>
+                                </div>
+
+                                {/* Profile + QR Code (Right Side) */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "row",   // ✅ side by side
+                                        alignItems: "center",
+                                        marginRight: "10px",
+                                        gap: "10px",            // ✅ 10px space between them
+                                    }}
+                                >
+                                    {/* Profile Image (2x2) */}
+                                    <div
+                                        style={{
+                                            width: "1.3in",
+                                            height: "1.3in",
+                                            border: "1px solid black",
+                                            overflow: "hidden",
+                                            flexShrink: 0,
+                                            marginTop: "-15px"
+                                        }}
+                                    >
+                                        {person?.profile_img ? (
+                                            <img
+                                                src={`http://localhost:5000/uploads/${person.profile_img}`}
+                                                alt="Profile"
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+
+                                                }}
+                                            />
+                                        ) : (
+                                            <span style={{ fontSize: "12px", color: "#888" }}>No Image</span>
+                                        )}
+                                    </div>
+
+
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+                        <br />
+                        <br />
+                        <table
+
+                            style={{
+                                borderCollapse: "collapse",
+                                fontFamily: "Arial, Helvetica, sans-serif",
+                                width: "8in",
+                                margin: "0 auto",
+                                marginTop: "-20px",
+
+
+                                textAlign: "center",
+                                tableLayout: "fixed",
+                            }}
+                        >
+
+                            <tbody>
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "flex-end", // moves everything to the far right of the row
+                                                alignItems: "center",
+                                                width: "100%",
+                                            }}
+                                        >
+                                            <label
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    marginRight: "10px",
+                                                    marginTop: "-10px",
+
+                                                    fontSize: "14px"
+                                                }}
+                                            >
+                                                Applicant Id No.:
+                                            </label>
+
+                                            <span
+                                                style={{
+                                                    width: "200px", // fixed width for the underline
+                                                    borderBottom: "1px solid black",
+                                                    height: "1.3em",
+                                                    fontSize: "14px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <div style={{ marginTop: "-3px" }} className="dataField">
+                                                    {person.applicant_numbers}
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td
+                                        colSpan={40}
+                                        style={{
+
+                                            fontSize: "13px",
+                                            paddingTop: "5px",
+                                            marginTop: 0,
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <span
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    marginRight: "10px",
+                                                    fontSize: "14px"
+                                                }}
+                                            >
+                                                Name of Student:
+                                            </span>
+                                            <div style={{ flexGrow: 1, display: "flex", justifyContent: "space-between" }}>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.last_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.first_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.middle_name}
+                                                </span>
+                                                <span style={{ width: "25%", textAlign: "center", fontSize: "14.5px", borderBottom: "1px solid black" }}>
+                                                    {person.extension}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Labels Row */}
+                                <tr>
+                                    <td
+                                        colSpan={40}
+                                        style={{
+
+                                            fontSize: "12px",
+                                            paddingTop: "2px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                marginLeft: "-30px",
+
+                                            }}
+                                        >
+                                            <span style={{ width: "20%", textAlign: "center" }}>(Pls. PRINT)</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Last Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Given Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Middle Name</span>
+                                            <span style={{ width: "20%", textAlign: "center" }}>Ext. Name</span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Email & Applicant ID */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={20}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <label style={{ fontWeight: "bold", whiteSpace: "nowrap", marginRight: "10px", fontSize: "14px" }}>Date Applied</label>
+                                            <span style={{ flexGrow: 1, borderBottom: "1px solid black", height: "1.3em", fontSize: "14px" }}>
+                                                <div style={{ marginTop: "-3px" }} className="dataField"></div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td colSpan={20}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                            <label style={{ fontWeight: "bold", whiteSpace: "nowrap", marginRight: "10px", fontSize: "14px" }}>Date Examination:</label>
+                                            <span style={{ flexGrow: 1, borderBottom: "1px solid black", height: "1.3em", fontSize: "14px" }}>
+                                                <div style={{ marginTop: "-3px" }} className="dataField"></div>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* Email & Applicant ID */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%", marginTop: "10px" }}>
+                                            <label
+                                                style={{
+                                                    fontWeight: "bold",
+                                                    whiteSpace: "nowrap",
+                                                    fontSize: "14px",
+                                                    marginRight: "10px",
+                                                }}
+                                            >
+                                                ECAT Examination Result/Score:
+                                            </label>
+
+                                            {/* 25px inline block space */}
+                                            <span
+                                                style={{
+                                                    display: "inline-block",
+                                                    width: "100px",
+                                                    height: "1px",
+                                                    marginRight: "15px",
+                                                    borderBottom: "1px solid black",
+                                                }}
+                                            ></span>
+
+                                            {/* PASSED checkbox */}
+                                            <div style={{ display: "flex", alignItems: "center", marginRight: "20px" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    style={{
+                                                        width: "30px",
+                                                        height: "30px",
+                                                        marginRight: "8px",
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: "14px", fontWeight: "bold" }}>Passed</span>
+                                            </div>
+
+                                            {/* FAILED checkbox */}
+                                            <div style={{ display: "flex", alignItems: "center" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    style={{
+                                                        width: "30px",
+                                                        height: "30px",
+                                                        marginRight: "8px",
+                                                    }}
+                                                />
+                                                <span style={{ fontSize: "14px", fontWeight: "bold" }}>Failed</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    {/* LEFT HALF */}
+                                    <td colSpan={19} style={{ padding: 0 }}>
+                                        <span
+                                            style={{
+                                                fontSize: "15px",
+                                                fontWeight: "bold",
+                                                display: "block",
+                                                marginBottom: "2px",
+                                                textAlign: "left",
+                                            }}
+                                        >
+                                            FROM DEGREE/PROGRAM APPLIED
+                                        </span>
+
+                                        <div
+                                            style={{
+                                                border: "1px solid black",
+                                                width: "100%",
+                                                height: "25px",
+                                                lineHeight: "25px",  // 🔥 makes it stay perfectly centered
+                                                fontSize: "12px",
+                                            }}
+                                        ></div>
+                                    </td>
+
+                                    {/* CENTER GAP */}
+                                    <td colSpan={2}></td>
+
+                                    {/* RIGHT HALF */}
+                                    <td colSpan={19} style={{ padding: 0 }}>
+                                        <span
+                                            style={{
+                                                fontSize: "15px",
+                                                display: "block",
+                                                textAlign: "left",
+                                                marginBottom: "2px",
+                                            }}
+                                        >
+                                            Change to <b>NEW DEGREE/PROGRAM</b>
+                                        </span>
+
+                                        <div
+                                            style={{
+                                                border: "1px solid black",
+                                                width: "100%",
+                                                height: "25px",
+                                                lineHeight: "25px",  // 🔥 same height & alignment as left
+                                                fontSize: "12px",
+                                            }}
+                                        ></div>
+                                    </td>
+                                </tr>
+
+
+                                {/* Reason for Change + Applicant's Signature (matches image placement) */}
+                                <tr style={{ fontSize: "13px", }}>
+                                    <td colSpan={40} style={{ padding: 0 }}>
+                                        <div
+                                            style={{
+                                                position: "relative",
+                                                width: "100%",
+                                                paddingTop: "6px",
+                                                paddingBottom: "6px",
+                                                boxSizing: "border-box",
+
+                                            }}
+                                        >
+                                            {/* Label + underline */}
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        fontWeight: "700",
+                                                        whiteSpace: "nowrap",
+                                                        marginLeft: "6px",
+                                                        marginRight: "6px",
+                                                        fontSize: "14px"
+                                                    }}
+                                                >
+                                                    Reason's for Change:
+                                                </span>
+
+                                                {/* Underline that fills until signature block */}
+                                                <div
+                                                    style={{
+                                                        flexGrow: 1,
+                                                        borderBottom: "1px solid #000",
+                                                        height: "1.15em",
+                                                        marginTop: "-4px",
+                                                        marginRight: "260px", // space for signature block
+                                                    }}
+                                                ></div>
+                                            </div>
+
+                                            {/* Signature block on the right */}
+                                            <div
+                                                style={{
+                                                    position: "absolute",
+                                                    right: "6px",
+                                                    top: "6px",
+                                                    width: "240px",
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        width: "100%",
+                                                        borderBottom: "1px solid #000",
+                                                        height: "1.15em",
+                                                        marginBottom: "-2px",
+                                                    }}
+                                                ></div>
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        whiteSpace: "nowrap",
+                                                        textAlign: "center",
+                                                    }}
+                                                >
+                                                    Applicant's Signature
+                                                </div>
+                                            </div>
+
+                                            {/* NEW LINE — 60% width (AFTER signature) */}
+                                            <div
+                                                style={{
+                                                    marginTop: "12px",
+                                                    width: "64.5%",
+                                                    borderBottom: "1px solid #000",
+                                                    height: "1.1em",
+                                                    marginLeft: "6px", // aligns with other left content
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* College Approval from Current Program Applied */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+
+                                                fontWeight: "bold",
+                                                textAlign: "left",
+                                                fontSize: "14px"
+                                            }}
+                                        >
+                                            College Approval from current program applied:
+                                        </div>
+                                    </td>
+                                </tr>
+                                {/* College Code / Program Head / College Dean */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                width: "100%",
+                                                marginTop: "5px",
+                                            }}
+                                        >
+                                            {/* College Code */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Code</div>
+                                            </div>
+
+                                            {/* Program Head */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>Program Head</div>
+                                            </div>
+
+                                            {/* College Dean */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Dean</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+
+                                                fontWeight: "bold",
+                                                textAlign: "left",
+                                                fontSize: "14px"
+                                            }}
+                                        >
+                                            College Acceptance to new program applied:
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                {/* College Code / Program Head / College Dean (Approval Row) */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                width: "100%",
+                                                marginTop: "5px",
+                                            }}
+                                        >
+                                            {/* College Code */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Code</div>
+                                            </div>
+
+                                            {/* Program Head */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>Program Head</div>
+                                            </div>
+
+                                            {/* College Dean */}
+                                            <div style={{ width: "30%" }}>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        height: "1.2em",
+                                                    }}
+                                                ></div>
+                                                <div style={{ marginTop: "3px" }}>College Dean</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+
+
+                                {/* Accepted / Not Accepted / Others */}
+                                <tr style={{ fontSize: "13px" }}>
+                                    <td colSpan={40}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "flex-end", // aligns everything to the right
+                                                alignItems: "center",
+                                                gap: "20px",
+                                                marginTop: "10px",
+                                            }}
+                                        >
+                                            {/* Accepted */}
+                                            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                Accepted
+                                            </label>
+
+                                            {/* Not Accepted */}
+                                            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                Not Accepted
+                                            </label>
+
+                                            {/* Other/s + Line beside it */}
+                                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                                                    <input type="checkbox" style={{ width: "25px", height: "25px" }} />
+                                                    Other/s:
+                                                </label>
+                                                <div
+                                                    style={{
+                                                        borderBottom: "1px solid black",
+                                                        width: "250px",
+                                                        height: "1px",
+                                                    }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+
+
+                            </tbody>
+
+                        </table>
+
+
+                        <div
+
+                            style={{
+                                width: "8in", // matches table width assuming 8in for 40 columns
+                                maxWidth: "100%",
+                                margin: "0 auto",
+                                boxSizing: "border-box",
+                                padding: "10px 0",
+                            }}
+                        >
+                            {/* Top solid line */}
+                            <hr
+                                style={{
+                                    width: "100%",
+                                    maxWidth: "100%",
+                                    borderTop: "1px solid black",
+                                    marginTop: "-5px",
+                                }}
+                            />
+
+                            {/* College Dean's Copy aligned right */}
+                            <div
+                                style={{
+                                    width: "100%",
+                                    textAlign: "right", // aligns to the right side
+                                    fontWeight: "normal",
+                                    fontSize: "14px",
+                                    color: "black",
+                                    marginBottom: "0",
+                                    marginTop: "10px"
+                                }}
+                            >
+                                Admission Services Copy
+                            </div>
+
+
+                        </div>
+                    </Container>
+                </div>
+            )}
 
         </Box>
     );

@@ -534,12 +534,13 @@ const ApplicantDashboard = (props) => {
     const fetchAnnouncements = async () => {
       try {
         const role = localStorage.getItem("role"); // ✅ get the current user role
-
         const res = await axios.get(
           `http://localhost:5000/api/announcements?role=${role}`
         );
 
-        setAnnouncements(res.data);
+        // Sort latest first
+        const sorted = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setAnnouncements(sorted);
       } catch (err) {
         console.error("❌ Failed to fetch announcements:", err);
       }
@@ -978,7 +979,7 @@ const ApplicantDashboard = (props) => {
                               alt={a.title}
                               style={{
                                 width: "100%",
-                                maxHeight: "150px",
+                                maxHeight: "171px",
                                 objectFit: "cover",
                                 borderRadius: "6px",
                                 marginBottom: "6px",
@@ -1137,7 +1138,7 @@ const ApplicantDashboard = (props) => {
                     borderRight: `2px solid ${borderColor}`,
                     borderBottom: `2px solid ${borderColor}`, // ✅ add bottom border here
                     borderTop: `2px solid ${borderColor}`,
-                       borderRadius: "10px",
+                    borderRadius: "10px",
                     borderRadius: "0 0 8px 8px", // ✅ match with header rounding
                     overflow: "hidden",
                   }}
@@ -1168,7 +1169,7 @@ const ApplicantDashboard = (props) => {
                             sx={{
                               height: 45,
                               backgroundColor: "#fff",
-                              
+
                             }}
                           />
                         );
@@ -1188,7 +1189,7 @@ const ApplicantDashboard = (props) => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                           borderRadius: "50%",
+                            borderRadius: "50%",
                             backgroundColor: isToday
                               ? settings?.header_color || "#1976d2"
                               : isHoliday

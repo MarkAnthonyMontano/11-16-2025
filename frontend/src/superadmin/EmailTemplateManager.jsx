@@ -406,7 +406,7 @@ export default function EmailTemplateManager() {
                     <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Gmail Account</TableCell>
                     <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Department</TableCell>
                     <TableCell sx={{ fontWeight: "bold", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Active</TableCell>
-                    <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", width: "150px", border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff", textAlign: "center" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -430,9 +430,9 @@ export default function EmailTemplateManager() {
                               variant="contained"
                               size="small"
                               sx={{
-                                backgroundColor: "#4CAF50",
+                                backgroundColor: "green",
                                 color: "white",
-                                "&:hover": { backgroundColor: "#45A049" },
+
                               }}
                               onClick={() => handleEdit(r)}
                             >
@@ -444,7 +444,6 @@ export default function EmailTemplateManager() {
                               sx={{
                                 backgroundColor: "#B22222",
                                 color: "white",
-                                "&:hover": { backgroundColor: "#8B0000" },
                               }}
                               onClick={() => handleDelete(r.template_id)}
                             >

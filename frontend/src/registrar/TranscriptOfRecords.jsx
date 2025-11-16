@@ -318,8 +318,8 @@ const settings = useContext(SettingsContext);
     }));
 
     // Constants
-    const MAX_PAGE_HEIGHT_REM = 46;
-    const SUBJECT_HEIGHT_REM = 1.55;
+    const MAX_PAGE_HEIGHT_REM = 44;
+    const SUBJECT_HEIGHT_REM = 1.50;
     const MAX_SUBJECTS_PER_PAGE = Math.floor(MAX_PAGE_HEIGHT_REM / SUBJECT_HEIGHT_REM);
 
     // Function to chunk subjects into pages

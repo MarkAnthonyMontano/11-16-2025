@@ -1,85 +1,65 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { SettingsContext } from "../App";
-import axios from 'axios';
+import axios from "axios";
 import {
-  Container, Box, Button, Select, MenuItem, Typography, Paper, Grid
+  Box,
+  Button,
+  Select,
+  MenuItem,
+  Typography,
+  Paper,
+  Grid,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import Unauthorized from "../components/Unauthorized";
 import LoadingOverlay from "../components/LoadingOverlay";
 
 const DepartmentRoom = () => {
-
   const settings = useContext(SettingsContext);
 
+  // 🎨 Theme Colors
   const [titleColor, setTitleColor] = useState("#000000");
-  const [subtitleColor, setSubtitleColor] = useState("#555555");
   const [borderColor, setBorderColor] = useState("#000000");
   const [mainButtonColor, setMainButtonColor] = useState("#1976d2");
-  const [subButtonColor, setSubButtonColor] = useState("#ffffff");   // ✅ NEW
-  const [stepperColor, setStepperColor] = useState("#000000");       // ✅ NEW
 
-  const [fetchedLogo, setFetchedLogo] = useState(null);
-  const [companyName, setCompanyName] = useState("");
-  const [shortTerm, setShortTerm] = useState("");
-  const [campusAddress, setCampusAddress] = useState("");
-
-  useEffect(() => {
-    if (!settings) return;
-
-    // 🎨 Colors
-    if (settings.title_color) setTitleColor(settings.title_color);
-    if (settings.subtitle_color) setSubtitleColor(settings.subtitle_color);
-    if (settings.border_color) setBorderColor(settings.border_color);
-    if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
-    if (settings.sub_button_color) setSubButtonColor(settings.sub_button_color);   // ✅ NEW
-    if (settings.stepper_color) setStepperColor(settings.stepper_color);           // ✅ NEW
-
-    // 🏫 Logo
-    if (settings.logo_url) {
-      setFetchedLogo(`http://localhost:5000${settings.logo_url}`);
-    } else {
-      setFetchedLogo(EaristLogo);
-    }
-
-    // 🏷️ School Information
-    if (settings.company_name) setCompanyName(settings.company_name);
-    if (settings.short_term) setShortTerm(settings.short_term);
-    if (settings.campus_address) setCampusAddress(settings.campus_address);
-
-  }, [settings]);
-
-  const [room, setRoom] = useState({
-    room_id: '',
-    dprtmnt_id: ''
+  // 🧠 Snackbar State
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
   });
 
+  // 🎓 Data States
+  const [room, setRoom] = useState({ room_id: "", dprtmnt_id: "" });
   const [assignedRoomIds, setAssignedRoomIds] = useState([]);
   const [departmentList, setDepartmentList] = useState([]);
   const [roomList, setRoomList] = useState([]);
   const [assignedRooms, setAssignedRooms] = useState({});
 
+  // 🔐 Access Control
   const [userID, setUserID] = useState("");
-  const [user, setUser] = useState("");
   const [userRole, setUserRole] = useState("");
   const [hasAccess, setHasAccess] = useState(null);
   const [loading, setLoading] = useState(false);
   const pageId = 22;
 
-  const [employeeID, setEmployeeID] = useState("");
+  useEffect(() => {
+    if (!settings) return;
+    if (settings.title_color) setTitleColor(settings.title_color);
+    if (settings.border_color) setBorderColor(settings.border_color);
+    if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
+  }, [settings]);
 
   useEffect(() => {
-
     const storedUser = localStorage.getItem("email");
     const storedRole = localStorage.getItem("role");
     const storedID = localStorage.getItem("person_id");
     const storedEmployeeID = localStorage.getItem("employee_id");
 
     if (storedUser && storedRole && storedID) {
-      setUser(storedUser);
       setUserRole(storedRole);
       setUserID(storedID);
-      setEmployeeID(storedEmployeeID);
-
       if (storedRole === "registrar") {
         checkAccess(storedEmployeeID);
       } else {
@@ -93,50 +73,36 @@ const DepartmentRoom = () => {
   const checkAccess = async (employeeID) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/page_access/${employeeID}/${pageId}`);
-      if (response.data && response.data.page_privilege === 1) {
-        setHasAccess(true);
-      } else {
-        setHasAccess(false);
-      }
+      setHasAccess(response.data?.page_privilege === 1);
     } catch (error) {
-      console.error('Error checking access:', error);
+      console.error("Error checking access:", error);
       setHasAccess(false);
-      if (error.response && error.response.data.message) {
-        console.log(error.response.data.message);
-      } else {
-        console.log("An unexpected error occurred.");
-      }
-      setLoading(false);
     }
   };
 
-  // Fetch departments
   const fetchDepartment = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/get_department');
+      const response = await axios.get("http://localhost:5000/get_department");
       setDepartmentList(response.data);
     } catch (err) {
-      console.error('Error fetching departments:', err);
+      console.error("Error fetching departments:", err);
     }
   };
 
-  // Fetch room descriptions (list of rooms)
   const fetchRoomList = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/room_list');
+      const response = await axios.get("http://localhost:5000/room_list");
       setRoomList(response.data);
     } catch (err) {
-      console.log('Error fetching room list:', err);
+      console.log("Error fetching room list:", err);
     }
   };
 
-  // Fetch room assignments grouped by department
   const fetchRoomAssignments = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/assignments');
+      const response = await axios.get("http://localhost:5000/api/assignments");
       const assignments = response.data;
 
-      // Group rooms by department id
       const groupedAssignments = assignments.reduce((acc, assignment) => {
         const deptId = assignment.dprtmnt_id;
         if (!acc[deptId]) acc[deptId] = [];
@@ -147,12 +113,11 @@ const DepartmentRoom = () => {
         return acc;
       }, {});
 
-      // Extract assigned room IDs
       const assignedIds = assignments.map((a) => a.room_id || a.dprtmnt_room_id);
       setAssignedRoomIds(assignedIds);
       setAssignedRooms(groupedAssignments);
     } catch (err) {
-      console.error('Error fetching assignments:', err);
+      console.error("Error fetching assignments:", err);
     }
   };
 
@@ -164,99 +129,76 @@ const DepartmentRoom = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setRoom(prev => ({
+    setRoom((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleAssignRoom = async () => {
     try {
-      await axios.post('http://localhost:5000/api/assign', room);
-      fetchRoomAssignments();  // Re-fetch assignments after posting
-      setRoom({ room_id: '', dprtmnt_id: '' });
+      await axios.post("http://localhost:5000/api/assign", room);
+      fetchRoomAssignments();
+      setRoom({ room_id: "", dprtmnt_id: "" });
+
+      setSnackbar({
+        open: true,
+        message: "Room assigned successfully!",
+        severity: "success",
+      });
     } catch (err) {
-      console.log('Error assigning room:', err);
+      console.log("Error assigning room:", err);
+      setSnackbar({
+        open: true,
+        message: "Failed to assign room. Please try again.",
+        severity: "error",
+      });
     }
   };
 
-  // Handle unassigning a room from a department
   const handleUnassignRoom = async (dprtmnt_room_id) => {
     try {
       await axios.delete(`http://localhost:5000/api/unassign/${dprtmnt_room_id}`);
-      fetchRoomAssignments();  // Re-fetch assignments after unassigning
+      fetchRoomAssignments();
+
+      setSnackbar({
+        open: true,
+        message: "Room unassigned successfully!",
+        severity: "info",
+      });
     } catch (err) {
-      console.log('Error unassigning room:', err);
+      console.log("Error unassigning room:", err);
+      setSnackbar({
+        open: true,
+        message: "Failed to unassign room.",
+        severity: "error",
+      });
     }
   };
 
-  // 🔒 Disable right-click
-  document.addEventListener('contextmenu', (e) => e.preventDefault());
-
-  // 🔒 Block DevTools shortcuts + Ctrl+P silently
-  document.addEventListener('keydown', (e) => {
-    const isBlockedKey =
-      e.key === 'F12' || // DevTools
-      e.key === 'F11' || // Fullscreen
-      (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'j')) || // Ctrl+Shift+I/J
-      (e.ctrlKey && e.key.toLowerCase() === 'u') || // Ctrl+U (View Source)
-      (e.ctrlKey && e.key.toLowerCase() === 'p');   // Ctrl+P (Print)
-
-    if (isBlockedKey) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  });
-
-
-
-  // Put this at the very bottom before the return 
   if (loading || hasAccess === null) {
     return <LoadingOverlay open={loading} message="Check Access" />;
   }
 
   if (!hasAccess) {
-    return (
-      <Unauthorized />
-    );
+    return <Unauthorized />;
   }
 
   return (
-    <Box sx={{ height: "calc(100vh - 100px)", overflowY: "auto", paddingRight: 1, backgroundColor: "transparent" }}>
-
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          mb: 2,
-
-        }}
+    <Box sx={{ height: "calc(100vh - 100px)", overflowY: "auto", }}>
+      <Typography
+        variant="h4"
+        sx={{ fontWeight: "bold", color: titleColor, fontSize: "36px", mb: 2 }}
       >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 'bold',
-            color: titleColor,
-            fontSize: '36px',
-          }}
-        >
-          DEPARTMENT ROOM
-        </Typography>
+        DEPARTMENT ROOM
+      </Typography>
 
-
-
-
-      </Box>
       <hr style={{ border: "1px solid #ccc", width: "100%" }} />
-
       <br />
-
 
       <Box display="flex" gap={2} alignItems="flex-start" mb={4}>
         <Box width="50%">
-          <label style={{ fontWeight: 'bold', marginBottom: 4, display: 'block', color: "maroon" }} htmlFor="room_id">Room Available:</label>
+          <label style={{ fontWeight: "bold", color: "maroon" }}>Room Available:</label>
           <Select
             name="room_id"
             value={room.room_id}
@@ -266,7 +208,7 @@ const DepartmentRoom = () => {
           >
             <MenuItem value="">Select Available Room</MenuItem>
             {roomList
-              .filter(room => !assignedRoomIds.includes(room.room_id))
+              .filter((room) => !assignedRoomIds.includes(room.room_id))
               .map((room) => (
                 <MenuItem key={room.room_id} value={room.room_id}>
                   {room.room_description}
@@ -276,7 +218,7 @@ const DepartmentRoom = () => {
         </Box>
 
         <Box width="50%">
-          <label style={{ fontWeight: 'bold', marginBottom: 4, display: 'block', color: "maroon" }} htmlFor="dprtmnt_id">Choose Department:</label>
+          <label style={{ fontWeight: "bold", color: "maroon" }}>Choose Department:</label>
           <Select
             name="dprtmnt_id"
             value={room.dprtmnt_id}
@@ -295,12 +237,10 @@ const DepartmentRoom = () => {
 
         <Button
           variant="contained"
-
-          style={{ backgroundColor: mainButtonColor, color: "#ffffff", width: "200px" }}
-
+          style={{ backgroundColor: "#primary", color: "#fff", width: "200px" }}
           onClick={handleAssignRoom}
           disabled={!room.room_id || !room.dprtmnt_id}
-          sx={{ height: 56, alignSelf: 'flex-end' }} // align with select fields
+          sx={{ height: 56, alignSelf: "flex-end" }}
         >
           Save
         </Button>
@@ -313,26 +253,23 @@ const DepartmentRoom = () => {
       <Grid container spacing={1}>
         {departmentList.map((dept) => (
           <Grid item xs={12} md={4} key={dept.dprtmnt_id}>
-            <Paper elevation={2} style={{ padding: '10px', border: `2px solid ${borderColor}` }}>
-              <Typography variant="subtitle2" style={{ fontSize: '14px', marginBottom: '8px' }}>
+            <Paper elevation={2} style={{ padding: "10px", border: `2px solid ${borderColor}` }}>
+              <Typography variant="subtitle2" style={{ fontSize: "14px", marginBottom: "8px" }}>
                 {dept.dprtmnt_name}
               </Typography>
 
               <Box display="flex" flexWrap="wrap" gap={0.5}>
-                {assignedRooms[dept.dprtmnt_id] && assignedRooms[dept.dprtmnt_id].length > 0 ? (
+                {assignedRooms[dept.dprtmnt_id]?.length > 0 ? (
                   assignedRooms[dept.dprtmnt_id].map((room) => (
                     <Box
                       key={room.room_id}
-                      position="relative"
                       sx={{
                         backgroundColor: mainButtonColor,
-                        color: 'white',
-                        borderRadius: '4px',
-                        padding: '6px 8px',
-                        fontSize: '12px',
-                        marginBottom: '4px',
-                        marginRight: '4px',
-                        minWidth: '80px',
+                        color: "white",
+                        borderRadius: "4px",
+                        padding: "6px 8px",
+                        fontSize: "12px",
+                        position: "relative",
                       }}
                     >
                       Room {room.room_description}
@@ -340,20 +277,17 @@ const DepartmentRoom = () => {
                         onClick={() => handleUnassignRoom(room.room_id || room.dprtmnt_room_id)}
                         size="small"
                         sx={{
-                          position: 'absolute',
-                          top: '-6px',
-                          right: '-6px',
-                          minWidth: '22px',
-                          height: '22px',
-                          padding: '0',
-                          color: 'white',
-                          backgroundColor: 'rgba(0,0,0,0.4)',
-                          borderRadius: '50%',
-                          fontSize: '14px',
-                          lineHeight: '1',
-                          '&:hover': {
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                          }
+                          position: "absolute",
+                          top: "-6px",
+                          right: "-6px",
+                          minWidth: "22px",
+                          height: "22px",
+                          padding: "0",
+                          color: "white",
+                          backgroundColor: "rgba(0,0,0,0.4)",
+                          borderRadius: "50%",
+                          fontSize: "14px",
+                          "&:hover": { backgroundColor: "rgba(0,0,0,0.6)" },
                         }}
                       >
                         ×
@@ -361,18 +295,31 @@ const DepartmentRoom = () => {
                     </Box>
                   ))
                 ) : (
-                  <Typography variant="body2" style={{ fontSize: '12px' }}>
+                  <Typography variant="body2" style={{ fontSize: "12px" }}>
                     No rooms assigned.
                   </Typography>
                 )}
               </Box>
-
             </Paper>
           </Grid>
         ))}
       </Grid>
 
-
+      {/* ✅ Snackbar Notification */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

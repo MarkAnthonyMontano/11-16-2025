@@ -151,9 +151,7 @@ const YearPanel = () => {
           <Typography sx={{ color: subtitleColor, fontWeight: "bold", mb: 1, fontSize: "18px" }}>
             Add New Year
           </Typography>
-          <Typography sx={{ mb: 2, fontSize: "14px", color: "#777" }}>
-            Enter the year description and click <strong>Save</strong> to add it.
-          </Typography>
+           <Typography fontWeight={500}>Year Panel:</Typography>
           <input
             type="text"
             placeholder="Enter year (e.g., 2026)"

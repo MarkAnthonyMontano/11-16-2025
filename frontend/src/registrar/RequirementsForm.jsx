@@ -280,6 +280,7 @@ const RequirementsForm = () => {
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <Typography fontWeight={500}>Requirements Description:</Typography>
             <input
               type="text"
               value={description}
@@ -287,6 +288,7 @@ const RequirementsForm = () => {
               placeholder="Enter requirement description"
               className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <Typography fontWeight={500}>Short Label:</Typography>
             <input
               type="text"
               value={shortLabel}
@@ -294,7 +296,7 @@ const RequirementsForm = () => {
               placeholder="Enter short label (e.g., F138)"
               className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-
+            <Typography fontWeight={500}>Category:</Typography>
             {/* ✅ Category Selector */}
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
@@ -322,7 +324,7 @@ const RequirementsForm = () => {
         {/* Right Side - Display Saved Requirements */}
         <div
           style={{ border: `2px solid ${borderColor}`, }}
-          className="md:w-1/2 bg-gray-50 p-6 rounded-lg shadow-sm max-h-96 overflow-y-auto"
+          className="md:w-1/2 bg-gray-50 p-6 rounded-lg shadow-sm max-h-100 overflow-y-auto"
         >
           <h3 style={{ color: subtitleColor, }} className="text-xl font-semibold mb-4">
             Saved Requirements
@@ -344,7 +346,7 @@ const RequirementsForm = () => {
                       sx={{
                         backgroundColor: "#9E0000",
                         color: "white",
-                        
+
                       }}
                       onClick={() => handleDelete(req.id)}
                     >

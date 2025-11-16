@@ -251,10 +251,8 @@ const RoomRegistration = () => {
     }
   };
 
-  // 🔹 Delete room
+  // 🔹 Delete room (automatic, no confirm)
   const handleDeleteRoom = async (roomId) => {
-    if (!window.confirm("Are you sure you want to delete this room?")) return;
-
     try {
       await axios.delete(`http://localhost:5000/room/${roomId}`);
       setSnack({
@@ -272,6 +270,7 @@ const RoomRegistration = () => {
       });
     }
   };
+
 
   // 🔹 Close snackbar
   const handleCloseSnack = (_, reason) => {
@@ -460,10 +459,10 @@ const RoomRegistration = () => {
               <Table stickyHeader size="small">
                 <TableHead >
                   <TableRow >
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Room ID</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Building</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Room Name</TableCell>
-                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff"}}>Actions</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Room ID</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Building</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Room Name</TableCell>
+                    <TableCell sx={{ border: `2px solid ${borderColor}`, backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -480,7 +479,7 @@ const RoomRegistration = () => {
                             backgroundColor: "green",
                             color: "white",
                             mr: 1,
-                          
+
                           }}
                           onClick={() => handleEditRoom(room)}
                         >
@@ -492,12 +491,12 @@ const RoomRegistration = () => {
                           sx={{
                             backgroundColor: "#9E0000",
                             color: "white",
-                           
                           }}
                           onClick={() => handleDeleteRoom(room.room_id)}
                         >
                           Delete
                         </Button>
+
                       </TableCell>
                     </TableRow>
                   ))}

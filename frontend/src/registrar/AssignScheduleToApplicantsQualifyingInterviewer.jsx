@@ -389,7 +389,7 @@ const AssignScheduleToApplicantsInterviewer = () => {
             return;
         }
 
-        socket.emit("update_interview_schedule", { schedule_id: selectedSchedule, applicant_numbers: [id] });
+        socket.emit("update_schedule_for_interview", { schedule_id: selectedSchedule, applicant_numbers: [id] });
 
         socket.once("update_schedule_result", (res) => {
             if (res.success) {
@@ -412,58 +412,63 @@ const AssignScheduleToApplicantsInterviewer = () => {
 
     // handleAssign40 (assign max up to room_quota)
     const handleAssign40 = () => {
-        if (!selectedSchedule) {
-            setSnack({ open: true, message: "Please select a schedule first.", severity: "warning" });
-            return;
+    if (!selectedSchedule) {
+        setSnack({ open: true, message: "Please select a schedule first.", severity: "warning" });
+        return;
+    }
+
+    const schedule = schedules.find(s => s.schedule_id == selectedSchedule);
+    if (!schedule) {
+        setSnack({ open: true, message: "Selected schedule not found.", severity: "error" });
+        return;
+    }
+
+    const currentCount = schedule.current_occupancy || 0;
+    const maxSlots = schedule.room_quota || 40;
+    const availableSlots = maxSlots - currentCount;
+
+    if (availableSlots <= 0) {
+        setSnack({ open: true, message: `This schedule is already full (${maxSlots} applicants).`, severity: "error" });
+        return;
+    }
+
+    // ✅ Filter all unassigned applicants first
+    const filteredPersons = persons.filter(a => a.schedule_id == null);
+
+    if (filteredPersons.length === 0) {
+        setSnack({ open: true, message: "No unassigned applicants available.", severity: "warning" });
+        return;
+    }
+
+    // ✅ Take only the ones that fit in available slots and map to applicant numbers
+    const unassigned = filteredPersons
+        .slice(0, availableSlots)
+        .map(a => a.applicant_number)
+        .filter(Boolean);
+
+    socket.emit("update_schedule_for_interview", { schedule_id: selectedSchedule, applicant_numbers: unassigned });
+
+    socket.once("update_schedule_result", (res) => {
+        if (res.success) {
+            setSnack({
+                open: true,
+                message: `Assigned: ${res.assigned?.length || 0}, Updated: ${res.updated?.length || 0}, Skipped: ${res.skipped?.length || 0}. Total unassigned applicants: ${filteredPersons.length}`,
+                severity: "success",
+            });
+            fetchAllApplicants();
+            setSchedules(prev =>
+                prev.map(s =>
+                    s.schedule_id == selectedSchedule
+                        ? { ...s, current_occupancy: s.current_occupancy + (res.assigned?.length || 0) }
+                        : s
+                )
+            );
+        } else {
+            setSnack({ open: true, message: res.error || "Failed to assign applicants.", severity: "error" });
         }
+    });
+};
 
-        const schedule = schedules.find(s => s.schedule_id === selectedSchedule);
-        if (!schedule) {
-            setSnack({ open: true, message: "Selected schedule not found.", severity: "error" });
-            return;
-        }
-
-        const currentCount = schedule.current_occupancy || 0;
-        const maxSlots = schedule.room_quota || 40;
-        const availableSlots = maxSlots - currentCount;
-
-        if (availableSlots <= 0) {
-            setSnack({ open: true, message: `This schedule is already full (${maxSlots} applicants).`, severity: "error" });
-            return;
-        }
-
-        const unassigned = persons
-            .filter(a => a.schedule_id == null)
-            .slice(0, availableSlots)
-            .map(a => a.applicant_number);
-
-        if (unassigned.length === 0) {
-            setSnack({ open: true, message: "No unassigned applicants available.", severity: "warning" });
-            return;
-        }
-
-        socket.emit("update_interview_schedule", { schedule_id: selectedSchedule, applicant_numbers: unassigned });
-
-        socket.once("update_schedule_result", (res) => {
-            if (res.success) {
-                setSnack({
-                    open: true,
-                    message: `Assigned: ${res.assigned?.length || 0}, Updated: ${res.updated?.length || 0}, Skipped: ${res.skipped?.length || 0}`,
-                    severity: "success"
-                });
-                fetchAllApplicants();
-                setSchedules(prev =>
-                    prev.map(s =>
-                        s.schedule_id === selectedSchedule
-                            ? { ...s, current_occupancy: currentCount + (res.assigned?.length || 0) }
-                            : s
-                    )
-                );
-            } else {
-                setSnack({ open: true, message: res.error || "Failed to assign applicants.", severity: "error" });
-            }
-        });
-    };
 
     // handleUnassignImmediate
     const handleUnassignImmediate = async (applicant_number) => {
@@ -530,7 +535,7 @@ const AssignScheduleToApplicantsInterviewer = () => {
             return;
         }
 
-        socket.emit("update_interview_schedule", { schedule_id: selectedSchedule, applicant_numbers: unassigned });
+        socket.emit("update_schedule_for_interview", { schedule_id: selectedSchedule, applicant_numbers: unassigned });
 
         socket.once("update_schedule_result", (res) => {
             if (res.success) {
@@ -638,8 +643,6 @@ Thank you and good luck on your Qualifying / Interview Exam!
         setConfirmOpen(true);
     };
 
-
-
     const confirmSendEmails = () => {
         setConfirmOpen(false);
         setLoading(true);
@@ -670,18 +673,9 @@ Thank you and good luck on your Qualifying / Interview Exam!
         });
     };
 
-
-
-
-
-
     // Email fields - start empty
     const [emailSubject, setEmailSubject] = useState("");
     const [emailMessage, setEmailMessage] = useState("");
-
-
-
-
     const [schedules, setSchedules] = useState([]);
 
     useEffect(() => {

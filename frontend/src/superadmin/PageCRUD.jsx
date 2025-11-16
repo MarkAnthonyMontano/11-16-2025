@@ -155,51 +155,103 @@ const PageCRUD = () => {
     const fetchPages = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/pages");
-            setPages(response.data);
+            const sortedPages = response.data.sort((a, b) => a.id - b.id);
+            setPages(sortedPages);
         } catch (error) {
             console.error("Error fetching pages:", error);
         }
     };
 
+    const [pageIdInput, setPageIdInput] = useState("");
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const data = { page_description: pageDescription, page_group: pageGroup };
 
         try {
             if (currentPageId) {
-                await axios.put(`http://localhost:5000/api/pages/${currentPageId}`, data);
-                setSnackbar({ open: true, message: "Page updated successfully!", type: "success" });
+                // UPDATE
+                await axios.put(`http://localhost:5000/api/pages/${currentPageId}`, {
+                    page_description: pageDescription,
+                    page_group: pageGroup,
+                });
+
+                setSnackbar({
+                    open: true,
+                    message: "Page updated successfully!",
+                    type: "success",
+                });
+
             } else {
-                await axios.post("http://localhost:5000/api/pages", data);
-                setSnackbar({ open: true, message: "Page added successfully!", type: "success" });
+                // ADD — detect duplicate
+                await axios.post("http://localhost:5000/api/pages", {
+                    id: pageIdInput,
+                    page_description: pageDescription,
+                    page_group: pageGroup,
+                });
+
+                setSnackbar({
+                    open: true,
+                    message: "Page added successfully!",
+                    type: "success",
+                });
             }
+
             fetchPages();
             handleClose();
+
         } catch (error) {
-            console.error("Error saving page:", error);
-            setSnackbar({ open: true, message: "Error saving page", type: "error" });
+            if (error.response && error.response.status === 400) {
+                // Duplicate ID error
+                setSnackbar({
+                    open: true,
+                    message: "Page ID already exists!",
+                    type: "error",
+                });
+            } else {
+                setSnackbar({
+                    open: true,
+                    message: "Error saving page",
+                    type: "error",
+                });
+            }
         }
     };
 
+
+
+
     const handleEdit = (page) => {
-        setCurrentPageId(page.id);
+        setCurrentPageId(String(page.id));
+        setPageIdInput(String(page.id));
+
         setPageDescription(page.page_description);
         setPageGroup(page.page_group);
         setOpen(true);
     };
 
+
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this page?")) {
-            try {
-                await axios.delete(`http://localhost:5000/api/pages/${id}`);
-                fetchPages();
-                setSnackbar({ open: true, message: "Page deleted successfully!", type: "success" });
-            } catch (error) {
-                console.error("Error deleting page:", error);
-                setSnackbar({ open: true, message: "Error deleting page", type: "error" });
-            }
+        try {
+            await axios.delete(`http://localhost:5000/api/pages/${id}`);
+            fetchPages();
+
+            setSnackbar({
+                open: true,
+                message: "Page deleted successfully!",
+                type: "success",
+            });
+
+        } catch (error) {
+            console.error("Error deleting page:", error);
+
+            setSnackbar({
+                open: true,
+                message: "Error deleting page",
+                type: "error",
+            });
         }
     };
+
 
     const handleOpen = () => {
         resetForm();
@@ -213,10 +265,10 @@ const PageCRUD = () => {
 
     const resetForm = () => {
         setCurrentPageId(null);
+        setPageIdInput("");
         setPageDescription("");
         setPageGroup("");
     };
-
 
 
 
@@ -307,26 +359,34 @@ const PageCRUD = () => {
                         </TableHead>
                         <TableBody>
                             {pages.length > 0 ? (
-                                pages.map((page, index) => (
+                                pages.map((page) => (
                                     <TableRow key={page.id} hover>
-                                        <TableCell style={{ border: `2px solid ${borderColor}`, }}>{index + 1}</TableCell>
-                                        <TableCell style={{ border: `2px solid ${borderColor}`, }}>{page.page_description}</TableCell>
-                                        <TableCell style={{ border: `2px solid ${borderColor}`, }}>{page.page_group}</TableCell>
-                                        <TableCell style={{ border: `2px solid ${borderColor}`, }} align="center">
+                                        <TableCell style={{ border: `2px solid ${borderColor}` }}>
+                                            {page.id}
+                                        </TableCell>
+                                        <TableCell style={{ border: `2px solid ${borderColor}` }}>
+                                            {page.page_description}
+                                        </TableCell>
+                                        <TableCell style={{ border: `2px solid ${borderColor}` }}>
+                                            {page.page_group}
+                                        </TableCell>
+                                        <TableCell
+                                            style={{ border: `2px solid ${borderColor}` }}
+                                            align="center"
+                                        >
                                             <Button
                                                 variant="contained"
                                                 size="small"
                                                 sx={{
-                                                    backgroundColor: "#4CAF50",
+                                                    backgroundColor: "green",
                                                     color: "white",
                                                     marginRight: 1,
-                                                    "&:hover": { backgroundColor: "#45A049" },
+
                                                 }}
                                                 onClick={() => handleEdit(page)}
                                             >
                                                 Edit
                                             </Button>
-
                                             <Button
                                                 variant="contained"
                                                 size="small"
@@ -340,7 +400,6 @@ const PageCRUD = () => {
                                                 Delete
                                             </Button>
                                         </TableCell>
-
                                     </TableRow>
                                 ))
                             ) : (
@@ -376,6 +435,33 @@ const PageCRUD = () => {
                 </DialogTitle>
                 <DialogContent dividers sx={{ py: 4 }}>
                     <form onSubmit={handleSubmit}>
+
+                        {/* ADD MODE - ID editable */}
+                        {currentPageId === null && (
+                            <TextField
+                                fullWidth
+                                label="Page ID"
+                                variant="outlined"
+                                margin="normal"
+                                type="number"
+                                value={pageIdInput}
+                                onChange={(e) => setPageIdInput(e.target.value)}
+                                required
+                            />
+                        )}
+
+                        {/* EDIT MODE - ID read-only */}
+                        {currentPageId !== null && (
+                            <TextField
+                                fullWidth
+                                label="Page ID"
+                                variant="outlined"
+                                margin="normal"
+                                value={pageIdInput}
+                                InputProps={{ readOnly: true }}
+                            />
+                        )}
+
                         <TextField
                             fullWidth
                             label="Page Description"
@@ -385,6 +471,7 @@ const PageCRUD = () => {
                             onChange={(e) => setPageDescription(e.target.value)}
                             required
                         />
+
                         <TextField
                             fullWidth
                             label="Page Group"
@@ -396,6 +483,7 @@ const PageCRUD = () => {
                         />
                     </form>
                 </DialogContent>
+
                 <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
                     <Button onClick={handleClose} variant="outlined" color="secondary">
                         Cancel

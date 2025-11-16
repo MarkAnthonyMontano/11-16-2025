@@ -75,6 +75,7 @@ import RegistrarRequirements from './registrar/RegistrarRequirements';
 import RegistrarExaminationProfile from './registrar/RegistrarExaminationProfile';
 import AssignScheduleToApplicants from './registrar/AssignScheduleToApplicants';
 import AssignEntranceExam from './registrar/AssignEntranceExam';
+import AdmissionScheduleTile from './registrar/AdmissionScheduleTile';
 import ProctorApplicantList from './registrar/ProctorApplicantList';
 import ApplicantScoring from './registrar/ApplicantScoring';
 import QualifyingInterviewExamScore from './registrar/QualifyingInterviewExamScore';
@@ -106,6 +107,7 @@ import RoomRegistration from './registrar/RoomRegistration';
 import RegistrarExamPermit from './registrar/RegistrarExamPermit';
 import ReportOfGrade from './registrar/ReportOfGrade';
 import TranscriptOfRecords from './registrar/TranscriptOfRecords';
+import TOSFCrud from './superadmin/TOSFCrud';
 import EvaluationCRUD from './registrar/EvaluationCrud';
 
 import MedicalApplicantList from './registrar/MedicalApplicantList';
@@ -125,6 +127,7 @@ import ReadmissionDashboard2 from './registrar/ReadmissionDashboard2';
 import ReadmissionDashboard3 from './registrar/ReadmissionDashboard3';
 import ReadmissionDashboard4 from './registrar/ReadmissionDashboard4';
 import ReadmissionDashboard5 from './registrar/ReadmissionDashboard5';
+import AnnouncementForAdmission from './registrar/AnnouncementForAdmission';
 
 // APPLICANT FOLDER
 import Dashboard1 from './applicant/Dashboard1';
@@ -369,6 +372,7 @@ function App() {
 
                     <Route path="/assign_entrance_exam" element={<ProtectedRoute><AssignEntranceExam /></ProtectedRoute>} />
                     <Route path="/assign_schedule_applicant" element={<ProtectedRoute><AssignScheduleToApplicants /></ProtectedRoute>} />
+                                        <Route path="/admission_schedule_room_list" element={<ProtectedRoute><AdmissionScheduleTile /></ProtectedRoute>} />
                     <Route path="/applicant_scoring" element={<ProtectedRoute><ApplicantScoring /></ProtectedRoute>} />
 
                     <Route path="/assign_qualifying_interview_exam" element={<ProtectedRoute><AssignQualifyingInterviewExam /></ProtectedRoute>} />
@@ -492,9 +496,11 @@ function App() {
 
                     <Route path="/class_roster" element={<ProtectedRoute ><ClassRoster /></ProtectedRoute>} />
                     <Route path="/transcript_of_records" element={<ProtectedRoute ><TranscriptOfRecords /></ProtectedRoute>} />
+                    <Route path="/tosf_crud" element={<ProtectedRoute ><TOSFCrud /></ProtectedRoute>} />
 
                     <Route path="/email_template_manager" element={<ProtectedRoute><EmailTemplateManager /></ProtectedRoute>} />
                     <Route path="/announcement" element={<ProtectedRoute><Announcement /></ProtectedRoute>} />
+                    <Route path="/announcement_for_admission" element={<ProtectedRoute><AnnouncementForAdmission /></ProtectedRoute>} />
                     <Route path="/exam-permit/:applicant_number" element={<ExamPermit />} />
                     <Route path="/applicant-permit/:applicant_number" element={<ApplicantProfilePermit />} />
 
@@ -504,7 +510,7 @@ function App() {
                     <Route path="/student_admission_services" element={<ProtectedRoute allowedRoles={['student']} ><StudentAdmissionServices /></ProtectedRoute>} />
                     <Route path="/student_form_process" element={<ProtectedRoute allowedRoles={['student', 'registrar', 'applicant']}><StudentAdmissionFormProcess /></ProtectedRoute>} />
 
-        
+
                     {/*Public Examination Profile */}
                     <Route path="/applicant_profile" element={<ApplicantProfile />} />
                     <Route path="/applicant_profile/:applicantNumber" element={<ApplicantProfile />} />

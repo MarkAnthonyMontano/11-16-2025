@@ -181,7 +181,7 @@ const SchoolYearPanel = () => {
           </Typography>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div>
-              <label className="block font-semibold mb-1">Year Level</label>
+               <Typography fontWeight={500}>Year Level:</Typography>
               <select
                 className="border p-2 w-full rounded"
                 value={selectedYear}
@@ -195,7 +195,7 @@ const SchoolYearPanel = () => {
             </div>
 
             <div>
-              <label className="block font-semibold mb-1">Semester</label>
+            <Typography fontWeight={500}>Semester:</Typography>
               <select
                 className="border p-2 w-full rounded"
                 value={selectedSemester}

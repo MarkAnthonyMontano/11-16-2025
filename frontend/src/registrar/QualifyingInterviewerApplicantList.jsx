@@ -148,16 +148,16 @@ const InterviewerApplicantList = () => {
   const firstLine = words.slice(0, middle).join(" ");
   const secondLine = words.slice(middle).join(" ");
 
-   const tabs = [
-        { label: "Admission Process For College", to: "/applicant_list", icon: <SchoolIcon fontSize="large" /> },
-        { label: "Applicant Form", to: "/registrar_dashboard1", icon: <AssignmentIcon fontSize="large" /> },
-        { label: "Student Requirements", to: "/registrar_requirements", icon: <AssignmentTurnedInIcon fontSize="large" /> },
-        { label: "Qualifying / Interview Room Assignment", to: "/assign_qualifying_interview_exam", icon: <MeetingRoomIcon fontSize="large" /> },
-        { label: "Qualifying / Interview Schedule Management", to: "/assign_schedule_applicants_qualifying_interview", icon: <ScheduleIcon fontSize="large" /> },
-        { label: "Qualifying / Interviewer Applicant's List", to: "/qualifying_interviewer_applicant_list", icon: <PeopleIcon fontSize="large" /> },
-        { label: "Qualifying / Interview Exam Score", to: "/qualifying_interview_exam_scores", icon: <PersonSearchIcon fontSize="large" /> },
-        { label: "Student Numbering", to: "/student_numbering_per_college", icon: <DashboardIcon fontSize="large" /> },
-    ];
+  const tabs = [
+    { label: "Admission Process For College", to: "/applicant_list", icon: <SchoolIcon fontSize="large" /> },
+    { label: "Applicant Form", to: "/registrar_dashboard1", icon: <AssignmentIcon fontSize="large" /> },
+    { label: "Student Requirements", to: "/registrar_requirements", icon: <AssignmentTurnedInIcon fontSize="large" /> },
+    { label: "Qualifying / Interview Room Assignment", to: "/assign_qualifying_interview_exam", icon: <MeetingRoomIcon fontSize="large" /> },
+    { label: "Qualifying / Interview Schedule Management", to: "/assign_schedule_applicants_qualifying_interview", icon: <ScheduleIcon fontSize="large" /> },
+    { label: "Qualifying / Interviewer Applicant's List", to: "/qualifying_interviewer_applicant_list", icon: <PeopleIcon fontSize="large" /> },
+    { label: "Qualifying / Interview Exam Score", to: "/qualifying_interview_exam_scores", icon: <PersonSearchIcon fontSize="large" /> },
+    { label: "Student Numbering", to: "/student_numbering_per_college", icon: <DashboardIcon fontSize="large" /> },
+  ];
 
 
 
@@ -174,7 +174,8 @@ const InterviewerApplicantList = () => {
 
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [proctor, setProctor] = useState(null);
+  const [interviewerData, setInterviewerData] = useState(null);
+
   const [applicants, setApplicants] = useState([]);
   const [person, setPerson] = useState({
     campus: "",
@@ -193,7 +194,8 @@ const InterviewerApplicantList = () => {
         params: { query: searchQuery },
       });
 
-      setProctor(data[0]?.schedule || null);   // schedule details
+      setInterviewerData(data[0]?.schedule || null);
+
       setApplicants(data[0]?.applicants || []); // list of applicants
     } catch (err) {
       console.error(err);
@@ -221,181 +223,173 @@ const InterviewerApplicantList = () => {
     const newWin = window.open("", "Print-Window");
     newWin.document.open();
 
-    // ✅ Dynamically load logo and company info
     const logoSrc = fetchedLogo || EaristLogo;
     const name = companyName?.trim() || "No Company Name Available";
-    // ✅ Use the saved address from settings (dropdown or custom)
-    let campus = "";
 
-    if (settings?.campus_address) {
-      // If settings already has the custom or dropdown address stored
-      campus = settings.campus_address;
-    } else if (settings?.address) {
-      // Fallback if your settings object uses 'address' instead of 'campus_address'
-      campus = settings.address;
-    } else {
-      // Default fallback only if both are missing
-      campus = "No address set in Settings";
-    }
-
-    // ✅ Automatically split company name into two balanced lines
     const words = name.split(" ");
-    const middleIndex = Math.ceil(words.length / 2);
-    const firstLine = words.slice(0, middleIndex).join(" ");
-    const secondLine = words.slice(middleIndex).join(" ");
+    const mid = Math.ceil(words.length / 2);
+    const firstLine = words.slice(0, mid).join(" ");
+    const secondLine = words.slice(mid).join(" ");
+
+    const campus = settings?.campus_address || settings?.address || "No address set in Settings";
+
+    const today = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const borderColor = "black"; // border color for table
 
     const htmlContent = `
-    <html>
-      <head>
-        <title>Qualifyin / Interviewer Applicant List</title>
-        <style>
-          @page { size: A4; margin: 10mm; }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-          .print-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-          }
-          .print-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            width: 100%;
-          }
-          .print-header img {
-            position: absolute;
-            left: 0;
-            margin-left: 10px;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-          
-          }
-          table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-          }
-          th, td {
-            border: 2px solid maroon;
-            padding: 6px;
-            font-size: 12px;
-            text-align: left;
-          }
-          th {
-            text-align: center;
-            background-color: #800000;
-            color: white;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-        </style>
-      </head>
-      <body onload="window.print(); setTimeout(() => window.close(), 100);">
-        <div class="print-container">
-          <!-- ✅ HEADER -->
-          <div class="print-header">
-            <img src="${logoSrc}" alt="School Logo" />
-            <div>
-              <div>Republic of the Philippines</div>
+<html>
+<head>
+  <title>Qualifying / Interviewer Applicant List</title>
+  <style>
+    @page { size: A4 landscape; margin: 5mm; }
 
-              <!-- ✅ Dynamic company name split into 2 lines -->
-              <b style="letter-spacing: 1px; font-size: 20px; font-family: 'Times New Roman', serif;">
-                ${firstLine}
-              </b>
-              ${secondLine
-        ? `<div style="letter-spacing: 1px; font-size: 20px; font-family: 'Times New Roman', serif;">
-                       <b>${secondLine}</b>
-                     </div>`
-        : ""
-      }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
 
-              <!-- ✅ Dynamic campus address -->
-              <div style="font-size: 12px;">${campus}</div>
+    .print-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
 
-              <div style="margin-top: 25px;">
-                <b style="font-size: 22px; letter-spacing: 1px;">
-                  Qualifying / Interviewer Applicant List
-                </b>
-              </div>
-            </div>
-          </div>
+    .print-header img {
+      position: absolute;
+      left: 0;
+      margin-left: 10px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
 
-          <!-- ✅ INTERVIEWER INFO -->
-          <div style="margin-top: 20px; width: 100%; display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <span><b>Interviewer:</b> ${proctor?.interviewer || "N/A"}</span>
-              <span><b>Building:</b> ${proctor?.building_description || "N/A"}</span>
-            </div>
+    .print-header div { font-size: 12px; }
 
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <span><b>Room:</b> ${proctor?.room_description || "N/A"}</span>
-              <span><b>Schedule:</b>
-                ${proctor?.day_description || ""} |
-                ${proctor?.start_time
-        ? new Date("1970-01-01T" + proctor.start_time).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-        : ""
-      } -
-                ${proctor?.end_time
-        ? new Date("1970-01-01T" + proctor.end_time).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-        : ""
-      }
-              </span>
-            </div>
-          </div>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
 
-          <!-- ✅ TABLE -->
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Applicant #</th>
-                <th>Applicant Name</th>
-                <th>Program</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${applicants
-        .map((a, index) => {
-          const program =
-            curriculumOptions.find(
-              (item) => item.curriculum_id?.toString() === a.program?.toString()
-            )?.program_code ?? "N/A";
-          return `
-                    <tr>
-                      <td>${index + 1}</td>
-                      <td>${a.applicant_number}</td>
-                      <td>${a.last_name}, ${a.first_name} ${a.middle_name || ""}</td>
-                      <td>${program}</td>
-                    </tr>`;
-        })
-        .join("")}
-              <tr>
-                <td colspan="4" style="text-align:right; font-weight:bold;">
-                  Total Applicants: ${applicants.length}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    th, td {
+      border: 1px solid ${borderColor};
+      padding: 3px 4px;
+      font-size: 10px;
+      line-height: 1.1;
+    }
+
+    th {
+      text-align: center;
+      background-color: ${settings?.header_color || "#1976d2"};
+      color: white;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Column width balancing like Proctor */
+    th:nth-child(1) { width: 3%; }
+    th:nth-child(2) { width: 10%; }
+    th:nth-child(3) { width: 25%; }
+    th:nth-child(4) { width: 25%; }
+    th:nth-child(5) { width: 10%; }
+
+    .info-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body onload="window.print(); setTimeout(() => window.close(), 100);">
+  <div class="print-container">
+
+    <!-- HEADER -->
+    <div class="print-header">
+      <img src="${logoSrc}" alt="School Logo" />
+      <div>
+        <div>Republic of the Philippines</div>
+        <b style="letter-spacing:1px; font-size:22px; font-family:'Times New Roman', serif;">
+          ${firstLine}
+        </b>
+        ${secondLine ? `<div style="letter-spacing:1px; font-size:22px; font-family:'Times New Roman', serif;"><b>${secondLine}</b></div>` : ""}
+        <div style="font-size:12px;">${campus}</div>
+        <div style="margin-top:10px; font-size:12px;"><b>Date Printed:</b> ${today}</div>
+        <div style="margin-top:15px;">
+          <b style="font-size:18px; letter-spacing:1px;">Qualifying / Interviewer Applicant List</b>
         </div>
-      </body>
-    </html>
-  `;
+      </div>
+    </div>
+
+    <!-- INTERVIEW DETAILS -->
+    <div style="width: 100%; margin-top: 15px;">
+      <div class="info-row">
+        <span><b>Interviewer:</b> ${interviewerData?.interviewer || "N/A"}</span>
+        <span><b>Building:</b> ${interviewerData?.building_description || "N/A"}</span>
+      </div>
+      <div class="info-row">
+        <span><b>Room:</b> ${interviewerData?.room_description || "N/A"}</span>
+        <span><b>Schedule:</b>
+          ${interviewerData?.day_description || ""} |
+          ${interviewerData?.start_time ? new Date("1970-01-01T" + interviewerData.start_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : ""}
+          -
+          ${interviewerData?.end_time ? new Date("1970-01-01T" + interviewerData.end_time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : ""}
+        </span>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Applicant #</th>
+          <th>Applicant Name</th>
+          <th>Program</th>
+          <th>Signature</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${applicants.map((a, index) => {
+      const programItem = curriculumOptions.find(item => item.curriculum_id?.toString() === a.program?.toString());
+      const program = programItem ? `(${programItem.program_code}) - ${programItem.program_description} ${programItem.major || ""}` : "N/A";
+
+      return `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${a.applicant_number}</td>
+              <td>${a.last_name}, ${a.first_name} ${a.middle_name || ""}</td>
+              <td>${program}</td>
+              <td></td>
+            </tr>`;
+    }).join("")}
+        <tr>
+          <td colspan="5" style="text-align:right; font-weight:bold;">Total Applicants: ${applicants.length}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</body>
+</html>
+`;
 
     newWin.document.write(htmlContent);
     newWin.document.close();
   };
+
 
 
   // 🔎 Auto-search whenever searchQuery changes (debounced)
@@ -405,7 +399,8 @@ const InterviewerApplicantList = () => {
         handleSearch();
       } else {
         setApplicants([]); // clear results if empty search
-        setProctor(null);
+        setInterviewerData(null);
+
       }
     }, 500); // 500ms debounce
 
@@ -544,7 +539,7 @@ const InterviewerApplicantList = () => {
 
 
       <br />
-      {proctor && (
+      {interviewerData && (
         <Box
           sx={{
             display: "flex",
@@ -555,27 +550,28 @@ const InterviewerApplicantList = () => {
             fontSize: "16px",
           }}
         >
-          <span><b>Interviewer:</b> {proctor.interviewer || "N/A"}</span>
-          <span><b>Building:</b> {proctor.building_description || "N/A"}</span>
-          <span><b>Room:</b> {proctor.room_description || "N/A"}</span>
+          <span><b>Interviewer:</b> {interviewerData.interviewer || "N/A"}</span>
+          <span><b>Building:</b> {interviewerData.building_description || "N/A"}</span>
+          <span><b>Room:</b> {interviewerData.room_description || "N/A"}</span>
           <span>
-            <b>Schedule:</b> {proctor.day_description || ""} |{" "}
-            {proctor.start_time
-              ? new Date(`1970-01-01T${proctor.start_time}`).toLocaleTimeString("en-US", {
+            <b>Schedule:</b> {interviewerData.day_description || ""} |{" "}
+            {interviewerData.start_time
+              ? new Date(`1970-01-01T${interviewerData.start_time}`).toLocaleTimeString("en-US", {
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
               })
               : ""}{" "}
             -{" "}
-            {proctor.end_time
-              ? new Date(`1970-01-01T${proctor.end_time}`).toLocaleTimeString("en-US", {
+            {interviewerData.end_time
+              ? new Date(`1970-01-01T${interviewerData.end_time}`).toLocaleTimeString("en-US", {
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
               })
               : ""}
           </span>
+
         </Box>
       )}
 
@@ -625,7 +621,7 @@ const InterviewerApplicantList = () => {
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Program</TableCell>
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Building</TableCell>
                 <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Room</TableCell>
-                <TableCell sx={{ color: "white", textAlign: "center", border: `2px solid ${borderColor}` }}>Email Sent</TableCell>
+               
               </TableRow>
             </TableHead>
 
@@ -638,19 +634,23 @@ const InterviewerApplicantList = () => {
                     {`${a.last_name}, ${a.first_name} ${a.middle_name || ""}`}
                   </TableCell>
                   <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {curriculumOptions.find(
-                      (item) => item.curriculum_id?.toString() === a.program?.toString()
-                    )?.program_code ?? "N/A"}
+                    {(() => {
+                      const programItem = curriculumOptions.find(
+                        (item) => item.curriculum_id?.toString() === a.program?.toString()
+                      );
+                      return programItem
+                        ? `(${programItem.program_code}) - ${programItem.program_description} ${programItem.major || ""}`
+                        : "N/A";
+                    })()}
+                  </TableCell>
+
+                  <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
+                    {a.building_description || interviewerData?.building_description || "N/A"} {/* ✅ NEW */}
                   </TableCell>
                   <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {a.building_description || proctor?.building_description || "N/A"} {/* ✅ NEW */}
+                    {a.room_description || interviewerData?.room_description || "N/A"} {/* ✅ NEW */}
                   </TableCell>
-                  <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {a.room_description || proctor?.room_description || "N/A"} {/* ✅ NEW */}
-                  </TableCell>
-                  <TableCell align="left" sx={{ border: `2px solid ${borderColor}` }}>
-                    {a.email_sent ? "✅ Sent" : "❌ Not Sent"}
-                  </TableCell>
+             
                 </TableRow>
               ))}
             </TableBody>

@@ -19,8 +19,8 @@ import {
 import axios from "axios";
 
 const StudentFacultyEvaluation = () => {
-  
-const settings = useContext(SettingsContext);
+
+  const settings = useContext(SettingsContext);
 
   const [titleColor, setTitleColor] = useState("#000000");
   const [subtitleColor, setSubtitleColor] = useState("#555555");
@@ -61,7 +61,7 @@ const settings = useContext(SettingsContext);
     if (settings.short_term) setShortTerm(settings.short_term);
     if (settings.campus_address) setCampusAddress(settings.campus_address);
 
-  }, [settings]); 
+  }, [settings]);
 
   const [userID, setUserID] = useState("");
   const [user, setUser] = useState("");
@@ -173,26 +173,26 @@ const settings = useContext(SettingsContext);
   };
 
   // 🔒 Disable right-click
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // 🔒 Block DevTools shortcuts silently
-    document.addEventListener('keydown', (e) => {
-        const isBlockedKey =
-            e.key === 'F12' ||
-            e.key === 'F11' ||
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-            (e.ctrlKey && e.key === 'U');
+  // 🔒 Block DevTools shortcuts silently
+  document.addEventListener('keydown', (e) => {
+    const isBlockedKey =
+      e.key === 'F12' ||
+      e.key === 'F11' ||
+      (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+      (e.ctrlKey && e.key === 'U');
 
-        if (isBlockedKey) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    });
+    if (isBlockedKey) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
 
   return (
     <Box
       sx={{
-        
+
         ml: "-2rem",
         paddingRight: 8,
         height: "calc(100vh - 150px)",
@@ -207,7 +207,7 @@ const settings = useContext(SettingsContext);
           alignItems: "center",
           flexWrap: "wrap",
           mb: 2,
-          
+
         }}
       >
         <Typography
@@ -225,31 +225,42 @@ const settings = useContext(SettingsContext);
       <hr style={{ border: "1px solid #ccc", width: "100%" }} />
       <br />
 
-      {/* Course Select */}
-      <FormControl sx={{ mt: 3, minWidth: "600px" }}>
-        <InputLabel>Select Course</InputLabel>
+      <Typography fontWeight={500} mb={0.5}>
+        Choose Courses:
+      </Typography>
+
+      <FormControl fullWidth sx={{ maxWidth: "600px" }}>
+        <InputLabel id="course-label">Select Course</InputLabel>
+
         <Select
+          labelId="course-label"
           label="Select Course"
           value={selectedCourse}
           onChange={handleSelectedCourse}
         >
           {studentCourses.map((prof) => (
             <MenuItem key={prof.course_id} value={prof.course_id}>
-              <Box style={{ display: "flex", gap: "1rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Typography
                   sx={{
-                    width: "100px",
+                    minWidth: "100px",
                     borderRight: "1px solid rgba(0,0,0,0.1)",
+                    pr: 2, // spacing right
+                    fontWeight: 500,
                   }}
                 >
                   {prof.course_code}
                 </Typography>
-                {prof.course_description}
+
+                <Typography sx={{ fontSize: "0.95rem" }}>
+                  {prof.course_description}
+                </Typography>
               </Box>
             </MenuItem>
           ))}
         </Select>
       </FormControl>
+
 
       {/* Show professor info */}
       {selectedProfessor && (

@@ -296,12 +296,18 @@ const DepartmentRegistration = () => {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             variant="contained"
-            sx={{ backgroundColor: "maroon", color: "white", "&:hover": { backgroundColor: "#800000" } }}
+            sx={{ backgroundColor: "#primary", color: "white",  }}
             onClick={handleAddingDepartment}
           >
             Save
           </Button>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
+              <Button
+            variant="contained"
+            sx={{ backgroundColor: "#B22222", color: "white", }}
+         onClick={() => setOpenModal(false)}
+          >
+           Cancel
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

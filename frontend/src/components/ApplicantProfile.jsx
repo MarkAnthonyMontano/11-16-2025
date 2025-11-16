@@ -2,163 +2,186 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import RegistrarExamPermit from "../registrar/RegistrarExamPermit";
-import { TextField, Button, Box, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
-import QRScanner from "./QRScanner"; // make sure path is correct
+import QRScanner from "./QRScanner";
 
 const ApplicantProfile = () => {
-    const { applicantNumber } = useParams();
-    const navigate = useNavigate();
+  const { applicantNumber } = useParams();
+  const navigate = useNavigate();
 
-    const [personId, setPersonId] = useState(null);
-    const [searchQuery, setSearchQuery] = useState(applicantNumber || "");
-    const [scannerOpen, setScannerOpen] = useState(false);
+  const [personId, setPersonId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(applicantNumber || "");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "info" });
 
-    useEffect(() => {
-        if (!searchQuery) return;
+  const showSnackbar = (message, type = "info") => {
+    setSnackbar({ open: true, message, type });
+  };
 
-        const fetchPersonId = async () => {
-            try {
-                // 1️⃣ Get person_id by applicant_number
-                const res = await axios.get(`http://localhost:5000/api/person-by-applicant/${searchQuery}`);
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
 
-                if (!res.data?.person_id) {
-                    alert("❌ Applicant not found.");
-                    setPersonId(null);
-                    return;
-                }
+  const fetchApplicantData = async (query) => {
+  if (!query) return;
 
-                const pid = res.data.person_id;
+  try {
+    // 1️⃣ Get person_id by applicant_number
+    const res = await axios.get(`http://localhost:5000/api/person-by-applicant/${query}`);
+    if (!res.data?.person_id) {
+      showSnackbar("❌ Applicant not found.", "error");
+      setPersonId(null);
+      return;
+    }
 
-                // 2️⃣ Check if applicant is qualified for exam (verified documents)
-                const verifiedRes = await axios.get(`http://localhost:5000/api/document_status/check/${searchQuery}`);
+    const pid = res.data.person_id;
 
-                if (!verifiedRes.data.verified) {
-                    alert("❌ Applicant’s documents are not yet verified. Not qualified for exam.");
-                    setPersonId(null);
-                    return;
-                }
+    // 2️⃣ Check document verification
+    const verifiedRes = await axios.get(`http://localhost:5000/api/document_status/check/${query}`);
+    if (!verifiedRes.data.verified) {
+      showSnackbar("❌ Documents not yet verified. Not qualified for exam.", "error");
+      setPersonId(null);
+      return;
+    }
 
-                // 3️⃣ Check if applicant is already accepted FIRST
-                const statusRes = await axios.get(`http://localhost:5000/api/applicant-status/${searchQuery}`);
+    // 3️⃣ Get applicant scores (exam_result, qualifying_result, interview_result)
+    const scoreRes = await axios.get(`http://localhost:5000/api/applicant-scores/${query}`);
+    const { exam_result, qualifying_result, interview_result } = scoreRes.data || {};
 
-                if (statusRes.data?.found && statusRes.data.status === "Accepted") {
-                    alert("✅ Applicant already ACCEPTED. Please proceed to the medical.");
-                    setPersonId(pid);
-                    return;
-                }
+    // 🧮 Determine current applicant status
+    if (!exam_result) {
+      showSnackbar("📝 Verified applicant — no entrance exam score yet.", "info");
+    } else if (exam_result && !qualifying_result) {
+      showSnackbar("✅ Applicant passed Entrance Exam. Proceed to Qualifying Exam.", "success");
+    } else if (qualifying_result && !interview_result) {
+      showSnackbar("✅ Applicant passed Qualifying Exam. Proceed to Interview Exam.", "success");
+    } else if (interview_result) {
+      showSnackbar("🏁 Applicant has completed all exams. Awaiting acceptance status.", "success");
+    }
 
-                // 4️⃣ Then check if applicant already has exam score
-                const scoreRes = await axios.get(`http://localhost:5000/api/applicant-has-score/${searchQuery}`);
+    // 4️⃣ Check acceptance (medical step)
+    const statusRes = await axios.get(`http://localhost:5000/api/applicant-status/${query}`);
+    if (statusRes.data?.found && statusRes.data.status === "Accepted") {
+      showSnackbar("🎉 Applicant ACCEPTED! Proceed to Medical.", "success");
+      setPersonId(pid);
+      return;
+    }
 
-                if (scoreRes.data.hasScore) {
-                    alert("✅ This applicant is now qualified to take the Entrance examination");
-                    setPersonId(pid);
-                    return;
-                }
+    setPersonId(pid);
+  } catch (err) {
+    console.error("Error fetching applicant:", err);
+    showSnackbar("⚠️ Error fetching applicant data. Check console for details.", "error");
+    setPersonId(null);
+  }
+};
 
-                // ✅ If verified, not accepted, and no score — show permit
-                setPersonId(pid);
 
-            } catch (err) {
-                console.error("Error fetching applicant:", err);
-                setPersonId(null);
-            }
-        };
+  useEffect(() => {
+    if (searchQuery) fetchApplicantData(searchQuery);
+  }, [searchQuery]);
 
-        fetchPersonId();
-    }, [searchQuery]);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/applicant_profile/${searchQuery.trim()}`);
+      fetchApplicantData(searchQuery.trim());
+    }
+  };
 
-    const [userID, setUserID] = useState("");
-    const [user, setUser] = useState("");
-    const [userRole, setUserRole] = useState("");
-    const [hasAccess, setHasAccess] = useState(null);
-    const pageId = 11;
+  return (
+    <Box sx={{ p: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          mb: 2,
+          px: 2,
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
+            color: "maroon",
+            fontSize: "36px",
+          }}
+        >
+          APPLICANT PROFILE
+        </Typography>
+      </Box>
 
- 
+      <hr style={{ border: "1px solid #ccc", width: "100%" }} />
+      <br />
 
-    const handleSearch = () => {
-        if (searchQuery.trim()) {
-            navigate(`/applicant_profile/${searchQuery.trim()}`);
-        }
-    };
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <TextField
+          label="Enter Applicant Number"
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          size="small"
+        />
+        <Button variant="contained" onClick={handleSearch}>
+          Search
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<CameraAltIcon />}
+          onClick={() => setScannerOpen(true)}
+        >
+          Scan QR
+        </Button>
+      </Box>
 
-  
+      {/* 📷 QR Scanner Dialog */}
+      <QRScanner
+        open={scannerOpen}
+        onScan={(text) => {
+          let scannedNumber = String(text || "").trim();
+          if (scannedNumber.includes("/")) {
+            scannedNumber = scannedNumber.split("/").pop();
+          }
 
-    return (
-        <Box sx={{ p: 2 }}>
-            <Box
-                sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    mb: 2,
-                    px: 2,
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    sx={{
-                        fontWeight: "bold",
-                        color: "maroon",
-                        fontSize: "36px",
-                    }}
-                >
-                    APPLICANT PROFILE
-                </Typography>
-            </Box>
+          setScannerOpen(false);
+          setSearchQuery(scannedNumber);
+          showSnackbar(`📷 Scanned Applicant Number: ${scannedNumber}`, "info");
 
-            <hr style={{ border: "1px solid #ccc", width: "100%" }} />
-            <br />
+          // Delay to ensure scanner closes before search starts
+          setTimeout(() => handleSearch(), 500);
+        }}
+        onClose={() => setScannerOpen(false)}
+      />
 
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                <TextField
-                    label="Enter Applicant Number"
-                    variant="outlined"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    size="small"
-                />
-                <Button variant="contained" onClick={handleSearch}>
-                    Search
-                </Button>
-                <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<CameraAltIcon />}
-                    onClick={() => setScannerOpen(true)}
-                >
-                    Scan QR
-                </Button>
-            </Box>
+      {/* 📝 Display Exam Permit if applicant is valid */}
+      {personId ? (
+        <RegistrarExamPermit personId={personId} />
+      ) : (
+        searchQuery && <div>Invalid Applicant Number or not found.</div>
+      )}
 
-            {/* 📷 QR Scanner Dialog */}
-            <QRScanner
-                open={scannerOpen}
-                onScan={async (text) => {
-                    let scannedNumber = String(text || "").trim();
-                    if (scannedNumber.includes("/")) {
-                        scannedNumber = scannedNumber.split("/").pop();
-                    }
-
-                    setScannerOpen(false);
-                    setSearchQuery(scannedNumber);
-
-                    // Immediately trigger search logic
-                    setTimeout(() => handleSearch(), 300);
-                }}
-                onClose={() => setScannerOpen(false)}
-            />
-
-            {/* 📝 Display Exam Permit if applicant is valid */}
-            {personId ? (
-                <RegistrarExamPermit personId={personId} />
-            ) : (
-                searchQuery && <div>Invalid Applicant Number or not found.</div>
-            )}
-        </Box>
-    );
+      {/* Snackbar Notification */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.type} variant="filled">
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
 };
 
 export default ApplicantProfile;

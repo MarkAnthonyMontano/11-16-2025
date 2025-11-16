@@ -166,6 +166,7 @@ const SectionPanel = () => {
 
           <form onSubmit={handleSubmit}>
             <Box display="flex" flexDirection="column" gap={2}>
+               <Typography fontWeight={500}>Section Description:</Typography>
               <TextField
                 label="Section Description"
                 value={description}

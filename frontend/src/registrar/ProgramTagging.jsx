@@ -370,7 +370,7 @@ const ProgramTagging = () => {
               color: "white",
               mt: 3,
               width: "100%",
-              "&:hover": { backgroundColor: "#8b0000" },
+              "&:hover": { backgroundColor: "#000" },
             }}
           >
             {editingId ? "Update Program Tag" : "Insert Program Tag"}
@@ -441,23 +441,23 @@ const ProgramTagging = () => {
                 <tbody>
                   {taggedPrograms.map((program) => (
                     <tr key={program.program_tagging_id}>
-                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                      <td style={{ ...styles.td, border: `2px solid ${borderColor}` }}>
                         {program.curriculum_description}
                       </td>
-                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                      <td style={{ ...styles.td, border: `2px solid ${borderColor}` }}>
                         {program.course_description}
                       </td>
-                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                      <td style={{ ...styles.td, border: `2px solid ${borderColor}` }}>
                         {program.year_level_description}
                       </td>
-                      <td style={{ ...styles.td, border: `1px solid ${borderColor}` }}>
+                      <td style={{ ...styles.td, border: `2px solid ${borderColor}` }}>
                         {program.semester_description}
                       </td>
                       <td
                         style={{
                           ...styles.td,
                           whiteSpace: "nowrap",
-                          border: `1px solid ${borderColor}`,
+                          border: `2px solid ${borderColor}`,
                         }}
                       >
                         <button

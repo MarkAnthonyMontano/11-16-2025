@@ -47,7 +47,8 @@ const ProgramPanel = () => {
     if (settings.campus_address) setCampusAddress(settings.campus_address);
   }, [settings]);
 
-  const [program, setProgram] = useState({ name: "", code: "" });
+  const [program, setProgram] = useState({ name: "", code: "", major: "" });
+
   const [programs, setPrograms] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -131,7 +132,7 @@ const ProgramPanel = () => {
   };
 
   const handleAddingProgram = async () => {
-    if (!program.name || !program.code) {
+    if (!program.name || !program.code || !program.major) {
       setSnackbar({
         open: true,
         message: "Please fill all fields",
@@ -175,14 +176,14 @@ const ProgramPanel = () => {
     setProgram({
       name: prog.program_description,
       code: prog.program_code,
+      major: prog.major || "",
     });
     setEditMode(true);
     setEditId(prog.program_id);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this program?")) return;
 
+  const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/program/${id}`);
       fetchPrograms();
@@ -286,7 +287,7 @@ const ProgramPanel = () => {
     },
     table: { width: "100%", borderCollapse: "collapse" },
     th: {
-  
+
       padding: "15px",
       textAlign: "left",
       fontWeight: "bold",
@@ -365,6 +366,12 @@ const ProgramPanel = () => {
       <div style={styles.container}>
         <div style={styles.formSection}>
           <div style={styles.formGroup}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 2, textAlign: "left", color: subtitleColor, }}
+            >
+              Add Program
+            </Typography>
             <label htmlFor="program_name" style={styles.label}>
               Program Description:
             </label>
@@ -394,6 +401,22 @@ const ProgramPanel = () => {
             />
           </div>
 
+          <div style={styles.formGroup}>
+            <label htmlFor="program_major" style={styles.label}>
+              Major:
+            </label>
+            <input
+              type="text"
+              id="program_major"
+              name="major"
+              value={program.major}
+              onChange={handleChangesForEverything}
+              placeholder="Enter Major (e.g., Marketing Management)"
+              style={styles.input}
+            />
+          </div>
+
+
           <Button
             onClick={handleAddingProgram}
             variant="contained"
@@ -402,7 +425,7 @@ const ProgramPanel = () => {
               color: "white",
               mt: 3,
               width: "100%",
-              "&:hover": { backgroundColor: "#8b0000" },
+              "&:hover": { backgroundColor: "#000000" },
             }}
           >
             {editMode ? "Update Program" : "Insert Program"}
@@ -412,7 +435,7 @@ const ProgramPanel = () => {
         <div style={styles.displaySection}>
           <Typography
             variant="h6"
-            sx={{ mb: 2, textAlign: "center", color: "#333" }}
+            sx={{ mb: 2, textAlign: "center", color: subtitleColor, }}
           >
             Program List
           </Typography>
@@ -424,6 +447,7 @@ const ProgramPanel = () => {
                   <th style={styles.th}>ID</th>
                   <th style={styles.th}>Description</th>
                   <th style={styles.th}>Code</th>
+                  <th style={styles.th}>Major</th>
                   <th style={styles.th}>Actions</th>
                 </tr>
               </thead>
@@ -433,6 +457,7 @@ const ProgramPanel = () => {
                     <td style={styles.td}>{prog.program_id}</td>
                     <td style={styles.td}>{prog.program_description}</td>
                     <td style={styles.td}>{prog.program_code}</td>
+                    <td style={styles.td}>{prog.major || "—"}</td>
                     <td style={{ ...styles.td, textAlign: "center" }}>
                       <button
                         onClick={() => handleEdit(prog)}
@@ -450,6 +475,7 @@ const ProgramPanel = () => {
                   </tr>
                 ))}
               </tbody>
+
             </table>
             {programs.length === 0 && <p>No programs available.</p>}
           </div>

@@ -49,6 +49,8 @@ const CoursePanel = () => {
     course_description: "",
     course_unit: "",
     lab_unit: "",
+    lec_value: "",
+    lab_value: "",
   });
 
   const [courseList, setCourseList] = useState([]);
@@ -150,6 +152,8 @@ const CoursePanel = () => {
         course_description: "",
         course_unit: "",
         lab_unit: "",
+        lec_value: "",
+        lab_value: "",
       });
       showSnack("Course successfully added!", "success");
       fetchCourses();
@@ -165,6 +169,8 @@ const CoursePanel = () => {
       course_description: item.course_description,
       course_unit: item.course_unit,
       lab_unit: item.lab_unit,
+      lec_value: item.lec_value,
+      lab_value: item.lab_value,
     });
     setEditMode(true);
     setEditId(item.course_id);
@@ -189,6 +195,8 @@ const CoursePanel = () => {
         course_description: "",
         course_unit: "",
         lab_unit: "",
+        lec_value: "",
+        lab_value: "",
       });
     } catch (error) {
       console.error("Update failed:", error);
@@ -382,6 +390,28 @@ const CoursePanel = () => {
               style={styles.input}
             />
           </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Lecture Fees:</label>
+            <input
+              type="text"
+              name="lec_value"
+              value={course.lec_value}
+              onChange={handleChangesForEverything}
+              placeholder="Enter Lecture Fees"
+              style={styles.input}
+            />
+          </div>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Laboratory Fees:</label>
+            <input
+              type="text"
+              name="lab_value"
+              value={course.lab_value}
+              onChange={handleChangesForEverything}
+              placeholder="Enter Laboratory Fees"
+              style={styles.input}
+            />
+          </div>
 
           <button
             style={{ ...styles.button, backgroundColor: "#1976d2" }}
@@ -404,6 +434,8 @@ const CoursePanel = () => {
                   <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Code</th>
                   <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Course Unit</th>
                   <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Lab Unit</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Lec Fees</th>
+                  <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Lab Fees</th>
                   <th style={{ border: `2px solid ${borderColor}`,  backgroundColor: settings?.header_color || "#1976d2", color: "#fff" }}>Actions</th>
                 </tr>
               </thead>
@@ -415,6 +447,8 @@ const CoursePanel = () => {
                     <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>{c.course_code}</td>
                     <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>{c.course_unit}</td>
                     <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>{c.lab_unit}</td>
+                    <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>{c.lec_value}</td>
+                    <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>{c.lab_value}</td>
                     <td style={{ border: `2px solid ${borderColor}`, textAlign: "center" }}>
                       <div style={{ display: "flex", justifyContent: "center", gap: "8px" }}>
                         <button

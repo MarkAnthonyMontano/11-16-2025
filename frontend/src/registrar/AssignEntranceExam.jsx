@@ -500,7 +500,7 @@ const AssignEntranceExam = () => {
                   variant="contained"
                   sx={{
                     backgroundColor: "#1967d2",
-                    "&:hover": { bgcolor: "#a00000" },
+                    "&:hover": { bgcolor: "#000000" },
                     px: 6,
                     py: 1.5,
                     mt: 2,

@@ -215,10 +215,8 @@ const SuperAdminRoomRegistration = () => {
     }
   };
 
-  // 🔹 Delete room
+  // 🔹 Delete room (automatic, no confirm)
   const handleDeleteRoom = async (roomId) => {
-    if (!window.confirm("Are you sure you want to delete this room?")) return;
-
     try {
       await axios.delete(`http://localhost:5000/room/${roomId}`);
       setSnack({
@@ -236,6 +234,7 @@ const SuperAdminRoomRegistration = () => {
       });
     }
   };
+
 
   // 🔹 Close snackbar
   const handleCloseSnack = (_, reason) => {
@@ -397,7 +396,7 @@ const SuperAdminRoomRegistration = () => {
                             backgroundColor: "green",
                             color: "white",
                             mr: 1,
-                    
+
                           }}
                           onClick={() => handleEditRoom(room)}
                         >
@@ -409,12 +408,12 @@ const SuperAdminRoomRegistration = () => {
                           sx={{
                             backgroundColor: "#9E0000",
                             color: "white",
-                    
                           }}
                           onClick={() => handleDeleteRoom(room.room_id)}
                         >
                           Delete
                         </Button>
+
                       </TableCell>
                     </TableRow>
                   ))}

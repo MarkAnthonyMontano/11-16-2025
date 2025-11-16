@@ -56,7 +56,7 @@ const AssignInterviewExam = () => {
 
     }, [settings]);
 
-   const tabs = [
+    const tabs = [
         { label: "Admission Process For College", to: "/applicant_list", icon: <SchoolIcon fontSize="large" /> },
         { label: "Applicant Form", to: "/registrar_dashboard1", icon: <AssignmentIcon fontSize="large" /> },
         { label: "Student Requirements", to: "/registrar_requirements", icon: <AssignmentTurnedInIcon fontSize="large" /> },
@@ -67,7 +67,7 @@ const AssignInterviewExam = () => {
         { label: "Student Numbering", to: "/student_numbering_per_college", icon: <DashboardIcon fontSize="large" /> },
     ];
 
-    
+
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(3);
     const [clickedSteps, setClickedSteps] = useState(Array(tabs.length).fill(false));
@@ -181,11 +181,11 @@ const AssignInterviewExam = () => {
         e.preventDefault();
         setMessage("");
 
-        const sel = rooms.find((r) => String(r.room_id) === String(roomId));
-        if (!sel) {
-            setMessage("Please select a valid building and room.");
-            return;
-        }
+        // NO VALIDATION — DIRECT TEXT
+        const sel = {
+            building_description: buildingName,
+            room_description: roomId
+        };
 
         try {
             await axios.post("http://localhost:5000/insert_interview_schedule", {
@@ -198,7 +198,6 @@ const AssignInterviewExam = () => {
                 room_quota: roomQuota || 40,
             });
 
-            // ✅ Success
             setMessage("Interview schedule saved successfully ✅");
             setDay("");
             setRoomId("");
@@ -207,15 +206,12 @@ const AssignInterviewExam = () => {
             setInterviewer("");
             setRoomQuota("");
 
-            // 🔄 Refresh schedules
             const res = await axios.get("http://localhost:5000/interview_schedules_with_count");
             setSchedules(res.data);
 
         } catch (err) {
             console.error("Error saving schedule:", err);
-
             if (err.response && err.response.data && err.response.data.error) {
-                // ✅ Display backend-provided error (like conflict)
                 setMessage(err.response.data.error);
             } else {
                 setMessage("Failed to save schedule ❌");
@@ -223,23 +219,7 @@ const AssignInterviewExam = () => {
         }
     };
 
-    // 🔒 Disable right-click
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    // 🔒 Block DevTools shortcuts + Ctrl+P silently
-    document.addEventListener('keydown', (e) => {
-        const isBlockedKey =
-            e.key === 'F12' || // DevTools
-            e.key === 'F11' || // Fullscreen
-            (e.ctrlKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.key.toLowerCase() === 'j')) || // Ctrl+Shift+I/J
-            (e.ctrlKey && e.key.toLowerCase() === 'u') || // Ctrl+U (View Source)
-            (e.ctrlKey && e.key.toLowerCase() === 'p');   // Ctrl+P (Print)
-
-        if (isBlockedKey) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    });
 
 
 
@@ -277,7 +257,7 @@ const AssignInterviewExam = () => {
                         fontSize: '36px',
                     }}
                 >
-                   QUALIFYING / INTERVIEW ROOM ASSIGNMENT
+                    QUALIFYING / INTERVIEW ROOM ASSIGNMENT
                 </Typography>
 
 
@@ -384,20 +364,13 @@ const AssignInterviewExam = () => {
                                     Building
                                 </Typography>
                                 <TextField
-                                    select
                                     fullWidth
                                     size="medium"
                                     value={buildingName}
                                     onChange={(e) => setBuildingName(e.target.value)}
-                                >
-                                    {[...new Set(
-                                        rooms
-                                            .map(r => r.building_description)
-                                            .filter(b => b && b.trim() !== "")
-                                    )].map((b, i) => (
-                                        <MenuItem key={i} value={b}>{b}</MenuItem>
-                                    ))}
-                                </TextField>
+                                    placeholder="Enter Building Name"
+                                    required
+                                />
                             </Grid>
 
                             {/* Room */}
@@ -406,20 +379,13 @@ const AssignInterviewExam = () => {
                                     Room
                                 </Typography>
                                 <TextField
-                                    select
                                     fullWidth
                                     size="medium"
                                     value={roomId}
                                     onChange={(e) => setRoomId(e.target.value)}
-                                >
-                                    {rooms
-                                        .filter(r => r.building_description === buildingName || !buildingName)
-                                        .map(room => (
-                                            <MenuItem key={room.room_id} value={room.room_id}>
-                                                {room.room_description}
-                                            </MenuItem>
-                                        ))}
-                                </TextField>
+                                    placeholder="Enter Room Name / Room Number"
+                                    required
+                                />
                             </Grid>
 
                             {/* Start Time */}
@@ -492,7 +458,7 @@ const AssignInterviewExam = () => {
                                     variant="contained"
                                     sx={{
                                         backgroundColor: "#1967d2",
-                                        "&:hover": { bgcolor: "#a00000" },
+                                        "&:hover": { bgcolor: "#000000" },
                                         px: 6,
                                         py: 1.5,
                                         mt: 2,

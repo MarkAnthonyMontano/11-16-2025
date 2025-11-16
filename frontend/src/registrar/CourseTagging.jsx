@@ -719,9 +719,30 @@ const CourseTagging = () => {
           sx={{ border: `2px solid ${borderColor}` }}
         >
           <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Department Section
-            </Typography>
+            <Box style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Department Section
+              </Typography>
+              <Button 
+                style={{
+                  background: `${mainButtonColor}`,
+                  color: "white"
+                }} 
+                onClick={() => {
+                  if (studentNumber) {
+                    localStorage.setItem("studentNumberForCOR", studentNumber);
+                    window.open("/search_cor", "_blank");
+                  } else {
+                    setSnack({
+                      open: true,
+                      message: "Please select or provide a student number first",
+                      severity: "warning",
+                    });
+                  }
+                }}>
+                COR
+              </Button>
+            </Box>
 
             {/* Department Sections Dropdown */}
             {loading ? (

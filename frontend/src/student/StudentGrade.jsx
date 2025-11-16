@@ -259,14 +259,14 @@ const StudentGradingPage = () => {
           .map((term, idx) => (
             <Box key={idx} sx={{ mb: 4 }}>
               <Box className="flex mt-[2rem] mb-[1rem]">
-                <Typography variant="body2" color="text.secondary" className="w-full">
+                <Typography variant="body2" className="w-full" sx={{color: "#9E0000", fontWeight: "bold",}}>
                   Program: {studentGrade[0].program_description} ({studentGrade[0].program_code})
                 </Typography>
                 <Box className="flex gap-[5rem] w-[42rem]">
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2"  sx={{color: "#9E0000", fontWeight: "bold", }}>
                     School Year: {term.split(" ")[0]}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2"  sx={{color: "#9E0000", fontWeight: "bold", }}>
                     Semester: {term.split(" ").slice(1).join(" ")}
                   </Typography>
                 </Box>
@@ -274,15 +274,15 @@ const StudentGradingPage = () => {
 
               <TableContainer component={Paper} sx={{ marginTop: "1rem", boxShadow: "none" }}>
                 <Table size="small">
-                  <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+                  <TableHead sx={{           backgroundColor: settings?.header_color || "#1976d2"}}>
                     <TableRow>
-                      <TableCell style={{ border: `2px solid ${borderColor}`, width: "150px", minWidth: "150px", maxWidth: "150px", overflow: "hidden",}} ><strong>Code</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`, width: "45rem", minWidth: "45rem", maxWidth: "45rem", overflow: "hidden"}}><strong>Subject</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`, width: "15rem", minWidth: "15rem", maxWidth: "15rem", overflow: "hidden"}} align="center"><strong>Faculty Name</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`, width: "5rem", minWidth: "5rem", maxWidth: "5rem", overflow: "hidden"}} align="center"><strong>Units</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`, width: "10rem", minWidth: "10rem", maxWidth: "10rem", overflow: "hidden"}} align="center"><strong>Section</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`,}} align="center"><strong>Final Grade</strong></TableCell>
-                      <TableCell style={{ border: `2px solid ${borderColor}`,}} align="center"><strong>Status</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff", width: "150px", minWidth: "150px", maxWidth: "150px", overflow: "hidden",}} ><strong>Code</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff", width: "45rem", minWidth: "45rem", maxWidth: "45rem", overflow: "hidden"}}><strong>Subject</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff", width: "15rem", minWidth: "15rem", maxWidth: "15rem", overflow: "hidden"}} align="center"><strong>Faculty Name</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff", width: "5rem", minWidth: "5rem", maxWidth: "5rem", overflow: "hidden"}} align="center"><strong>Units</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff" ,width: "10rem", minWidth: "10rem", maxWidth: "10rem", overflow: "hidden"}} align="center"><strong>Section</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`, color: "#fff" ,}} align="center"><strong>Final Grade</strong></TableCell>
+                      <TableCell style={{ border: `2px solid ${borderColor}`,  color: "#fff"}} align="center"><strong>Status</strong></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -362,6 +362,9 @@ const StudentGradingPage = () => {
                               style={{
                                 border: `2px solid ${borderColor}`,
                                 fontWeight: "bold",
+                                color: "#9E0000",
+                                fontWeight: "bold",
+
                                 backgroundColor: "#f9f9f9",
                               }}
                               align="center"

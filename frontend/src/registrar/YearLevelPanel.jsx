@@ -151,6 +151,7 @@ const YearLevelPanel = () => {
           <Typography variant="h6" gutterBottom sx={{ color: subtitleColor }}>
             Add Year Level
           </Typography>
+           <Typography fontWeight={500}>Year Level Description:</Typography>
           <TextField
             fullWidth
             label="Year Level Description"

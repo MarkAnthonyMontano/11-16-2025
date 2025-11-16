@@ -38,7 +38,7 @@ const AnnouncementPanel = () => {
     const [hasAccess, setHasAccess] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const pageId = 66;
+    const pageId = 98;
 
     const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
@@ -81,11 +81,27 @@ const AnnouncementPanel = () => {
     const fetchAnnouncements = async () => {
         try {
             const res = await axios.get("http://localhost:5000/api/announcements");
-            setAnnouncements(res.data);
+
+            // Only announcements for applicant role
+            // AND only those still active based on valid_days
+            const filtered = res.data.filter((a) => {
+                const createdDate = new Date(a.created_at);
+                const expiryDate = new Date(createdDate);
+                expiryDate.setDate(createdDate.getDate() + Number(a.valid_days));
+
+                return (
+                    a.target_role === "applicant" &&
+                    new Date() <= expiryDate
+                );
+            });
+
+            setAnnouncements(filtered);
         } catch (err) {
             console.error(err);
         }
     };
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -97,7 +113,7 @@ const AnnouncementPanel = () => {
             formData.append("target_role", form.target_role);
             formData.append("creator_role", userRole);
             formData.append("creator_id", employeeID);
-            if (image) formData.append("image", image);
+            if (image) formData.append("file", image); // <-- CHANGE HERE
 
             if (editingId) {
                 await axios.put(`http://localhost:5000/api/announcements/${editingId}`, formData, {
@@ -105,7 +121,7 @@ const AnnouncementPanel = () => {
                 });
                 setSnackbar({ open: true, message: "Announcement updated!", severity: "success" });
             } else {
-                await axios.post(`http://localhost:5000/api/announcements`, formData, {
+                await axios.post(`http://localhost:5000/api/announcements/upload`, formData, { // <-- make sure this matches your backend route
                     headers: { "Content-Type": "multipart/form-data" },
                 });
                 setSnackbar({ open: true, message: "Announcement created!", severity: "success" });
@@ -140,6 +156,10 @@ const AnnouncementPanel = () => {
         } catch (err) {
             console.error(err);
         }
+    };
+
+    const handleRemoveImage = () => {
+        setImage(null);
     };
 
     if (loading || hasAccess === null) return <LoadingOverlay open={loading} message="Check Access" />;
@@ -223,8 +243,7 @@ const AnnouncementPanel = () => {
                                 onChange={(e) => setForm({ ...form, target_role: e.target.value })}
                                 required
                             >
-                                <MenuItem value="student">Student</MenuItem>
-                                <MenuItem value="faculty">Faculty</MenuItem>
+
                                 <MenuItem value="applicant">Applicant</MenuItem>
                             </Select>
                         </FormControl>

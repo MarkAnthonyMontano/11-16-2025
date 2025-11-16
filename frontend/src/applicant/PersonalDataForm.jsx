@@ -8,45 +8,45 @@ import { useLocation } from "react-router-dom";
 
 
 const PersonalDataForm = () => {
-  
-const settings = useContext(SettingsContext);
 
-  const [titleColor, setTitleColor] = useState("#000000");
-  const [subtitleColor, setSubtitleColor] = useState("#555555");
-  const [borderColor, setBorderColor] = useState("#000000");
-  const [mainButtonColor, setMainButtonColor] = useState("#1976d2");
-  const [subButtonColor, setSubButtonColor] = useState("#ffffff");   // ✅ NEW
-  const [stepperColor, setStepperColor] = useState("#000000");       // ✅ NEW
+    const settings = useContext(SettingsContext);
 
-  const [fetchedLogo, setFetchedLogo] = useState(null);
-  const [companyName, setCompanyName] = useState("");
-  const [shortTerm, setShortTerm] = useState("");
-  const [campusAddress, setCampusAddress] = useState("");
+    const [titleColor, setTitleColor] = useState("#000000");
+    const [subtitleColor, setSubtitleColor] = useState("#555555");
+    const [borderColor, setBorderColor] = useState("#000000");
+    const [mainButtonColor, setMainButtonColor] = useState("#1976d2");
+    const [subButtonColor, setSubButtonColor] = useState("#ffffff");   // ✅ NEW
+    const [stepperColor, setStepperColor] = useState("#000000");       // ✅ NEW
 
-  useEffect(() => {
-    if (!settings) return;
+    const [fetchedLogo, setFetchedLogo] = useState(null);
+    const [companyName, setCompanyName] = useState("");
+    const [shortTerm, setShortTerm] = useState("");
+    const [campusAddress, setCampusAddress] = useState("");
 
-    // 🎨 Colors
-    if (settings.title_color) setTitleColor(settings.title_color);
-    if (settings.subtitle_color) setSubtitleColor(settings.subtitle_color);
-    if (settings.border_color) setBorderColor(settings.border_color);
-    if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
-    if (settings.sub_button_color) setSubButtonColor(settings.sub_button_color);   // ✅ NEW
-    if (settings.stepper_color) setStepperColor(settings.stepper_color);           // ✅ NEW
+    useEffect(() => {
+        if (!settings) return;
 
-    // 🏫 Logo
-    if (settings.logo_url) {
-      setFetchedLogo(`http://localhost:5000${settings.logo_url}`);
-    } else {
-      setFetchedLogo(EaristLogo);
-    }
+        // 🎨 Colors
+        if (settings.title_color) setTitleColor(settings.title_color);
+        if (settings.subtitle_color) setSubtitleColor(settings.subtitle_color);
+        if (settings.border_color) setBorderColor(settings.border_color);
+        if (settings.main_button_color) setMainButtonColor(settings.main_button_color);
+        if (settings.sub_button_color) setSubButtonColor(settings.sub_button_color);   // ✅ NEW
+        if (settings.stepper_color) setStepperColor(settings.stepper_color);           // ✅ NEW
 
-    // 🏷️ School Information
-    if (settings.company_name) setCompanyName(settings.company_name);
-    if (settings.short_term) setShortTerm(settings.short_term);
-    if (settings.campus_address) setCampusAddress(settings.campus_address);
+        // 🏫 Logo
+        if (settings.logo_url) {
+            setFetchedLogo(`http://localhost:5000${settings.logo_url}`);
+        } else {
+            setFetchedLogo(EaristLogo);
+        }
 
-  }, [settings]); 
+        // 🏷️ School Information
+        if (settings.company_name) setCompanyName(settings.company_name);
+        if (settings.short_term) setShortTerm(settings.short_term);
+        if (settings.campus_address) setCampusAddress(settings.campus_address);
+
+    }, [settings]);
 
 
 
@@ -58,6 +58,7 @@ const settings = useContext(SettingsContext);
     const [user, setUser] = useState("");
     const [userRole, setUserRole] = useState("");
     const [person, setPerson] = useState({
+        applicant_number: "",
         profile_img: "",
         campus: "",
         academicProgram: "",
@@ -85,6 +86,7 @@ const settings = useContext(SettingsContext);
         religion: "",
         civilStatus: "",
         tribeEthnicGroup: "",
+        otherEthnicGroup: "",
         cellphoneNumber: "",
         emailAddress: "",
         telephoneNumber: "",
@@ -103,6 +105,26 @@ const settings = useContext(SettingsContext);
         permanentProvince: "",
         permanentMunicipality: "",
         permanentDswdHouseholdNumber: "",
+        father_deceased: "",
+        father_family_name: "", father_given_name: "", father_middle_name: "", father_ext: "", father_contact: "", father_occupation: "",
+        father_income: "", father_email: "", mother_deceased: "", mother_family_name: "", mother_given_name: "", mother_middle_name: "",
+        mother_contact: "", mother_occupation: "", mother_income: "", guardian: "", guardian_family_name: "", guardian_given_name: "",
+        guardian_middle_name: "", guardian_ext: "", guardian_nickname: "", guardian_address: "", guardian_contact: "", guardian_email: "",
+        schoolLevel: "",
+        schoolLastAttended: "",
+        schoolAddress: "",
+        courseProgram: "",
+        honor: "",
+        generalAverage: "",
+        yearGraduated: "",
+        schoolLevel1: "",
+        schoolLastAttended1: "",
+        schoolAddress1: "",
+        courseProgram1: "",
+        honor1: "",
+        generalAverage1: "",
+        yearGraduated1: "",
+        strand: "",
     });
 
 
@@ -112,10 +134,30 @@ const settings = useContext(SettingsContext);
         try {
             const res = await axios.get(`http://localhost:5000/api/person/${id}`);
             setPerson(res.data); // make sure backend returns the correct format
+            setApplicantID(applicantNumber);
         } catch (error) {
             console.error("Failed to fetch person:", error);
         }
     };
+
+    const [applicantID, setApplicantID] = useState("");
+    const fetchApplicantNumber = async (personID) => {
+        try {
+            const res = await axios.get(
+                `http://localhost:5000/api/applicant_number/${personID}`
+            );
+            if (res.data && res.data.applicant_number) {
+                setApplicantID(res.data.applicant_number);
+                fetchEntranceExamScores(res.data.applicant_number);
+                fetchProctorSchedule(res.data.applicant_number);
+                fetchInterviewSchedule(res.data.applicant_number);
+                fetchCollegeApproval(res.data.applicant_number);
+            }
+        } catch (error) {
+            console.error("Failed to fetch applicant number:", error);
+        }
+    };
+
 
 
     const location = useLocation();
@@ -133,6 +175,7 @@ const settings = useContext(SettingsContext);
             setUser(storedUser);
             setUserRole(storedRole);
             setUserID(storedID);
+            setApplicantID(storedID);
 
             if (storedRole === "applicant" || storedRole === "registrar") {
                 fetchPersonData(storedID);
@@ -335,39 +378,39 @@ const settings = useContext(SettingsContext);
             <hr style={{ border: "1px solid #ccc", width: "100%" }} />
             <br />
 
-             {/* ✅ PRINT BUTTON (unchanged) */}
-               <button
-                 onClick={printDiv}
-                 style={{
-                   marginBottom: "1rem",
-                   padding: "10px 20px",
-                   border: "2px solid black",
-                   backgroundColor: "#f0f0f0",
-                   color: "black",
-                   borderRadius: "5px",
-                   marginTop: "20px",
-                   cursor: "pointer",
-                   fontSize: "16px",
-                   fontWeight: "bold",
-                   transition: "background-color 0.3s, transform 0.2s",
-                 }}
-                 onMouseEnter={(e) => (e.target.style.backgroundColor = "#d3d3d3")}
-                 onMouseLeave={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
-                 onMouseDown={(e) => (e.target.style.transform = "scale(0.95)")}
-                 onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
-               >
-                 <span
-                   style={{
-                     display: "flex",
-                     alignItems: "center",
-                     gap: "8px",
-                   }}
-                 >
-                   <FcPrint size={20} />
-                   Print Personal Data Form
-                 </span>
-               </button>
-              
+            {/* ✅ PRINT BUTTON (unchanged) */}
+            <button
+                onClick={printDiv}
+                style={{
+                    marginBottom: "1rem",
+                    padding: "10px 20px",
+                    border: "2px solid black",
+                    backgroundColor: "#f0f0f0",
+                    color: "black",
+                    borderRadius: "5px",
+                    marginTop: "20px",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    fontWeight: "bold",
+                    transition: "background-color 0.3s, transform 0.2s",
+                }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#d3d3d3")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "#f0f0f0")}
+                onMouseDown={(e) => (e.target.style.transform = "scale(0.95)")}
+                onMouseUp={(e) => (e.target.style.transform = "scale(1)")}
+            >
+                <span
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                    }}
+                >
+                    <FcPrint size={20} />
+                    Print Personal Data Form
+                </span>
+            </button>
+
             <Container>
                 <div ref={divToPrintRef}>
                     <div>
@@ -898,20 +941,9 @@ const settings = useContext(SettingsContext);
                                             fontSize: "14px",
                                             verticalAlign: "top"
                                         }}>
-                                        <div style={{ fontWeight: "bold" }}>STUDENT ID NUMBER</div>
+                                        <div style={{ fontWeight: "bold" }}>APPLICANT ID:</div>
 
-                                        <input
-                                            type="text"
-                                            style={{
-                                                marginTop: "5px",
-                                                width: "100%",
-
-                                                border: "none",
-                                                outline: "none",
-                                                fontSize: "15px",
-                                                fontFamily: "Times new Roman",
-                                            }}
-                                        />
+                                        {applicantID}
                                     </td>
 
                                     {/* LEARNER’S REFERENCE NUMBER */}
@@ -974,7 +1006,7 @@ const settings = useContext(SettingsContext);
                                 <tr>
                                     {/* SEX */}
                                     <td
-                                        colSpan={20}
+                                        colSpan={15}
                                         style={{
                                             border: "1px solid black",
                                             textAlign: "left",
@@ -1079,7 +1111,7 @@ const settings = useContext(SettingsContext);
 
 
                                     {/* E-MAIL ADDRESS */}
-                                    <td colSpan={20} style={{
+                                    <td colSpan={10} style={{
                                         border: "1px solid black",
                                         textAlign: "left",
 
@@ -1091,6 +1123,29 @@ const settings = useContext(SettingsContext);
                                         <input
                                             type="text"
                                             value={person.emailAddress || ""}
+                                            readOnly
+                                            style={{
+                                                marginTop: "5px",
+                                                width: "100%",
+                                                border: "none",
+                                                outline: "none",
+                                                fontSize: "15px",
+                                                fontFamily: "Times new Roman",
+                                            }}
+                                        />
+                                    </td>
+                                    <td colSpan={15} style={{
+                                        border: "1px solid black",
+                                        textAlign: "left",
+
+                                        fontSize: "14px",
+                                        verticalAlign: "top",
+                                        fontFamily: "Times new Roman",
+                                    }}>
+                                        <div style={{ fontWeight: "bold" }}>YEAR GRADUATED</div>
+                                        <input
+                                            type="text"
+                                            value={person.yearGraduated1 || ""}
                                             readOnly
                                             style={{
                                                 marginTop: "5px",
